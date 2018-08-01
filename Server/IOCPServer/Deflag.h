@@ -1,7 +1,6 @@
 #pragma once
 
-#define PACKETSIZE 256
-#define BUFSIZE 252 // 256-4
+#define BUFSIZE 256
 #define POOLSIZE 10
 
 #define EMOTIONSIZE 4
