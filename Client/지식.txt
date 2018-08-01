@@ -1,0 +1,9 @@
+<그래픽 디버거>
+- NVIDIA: nsight
+- 아주 좋음
+
+<셰이더 상수 버퍼>
+- directx 11 constant buffer alignment 참고
+- 16byte 정렬해야함
+- https://docs.microsoft.com/en-us/windows/desktop/direct3dhlsl/dx-graphics-hlsl-packing-rules
+

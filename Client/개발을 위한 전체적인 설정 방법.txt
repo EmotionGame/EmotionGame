@@ -1,0 +1,53 @@
+<Visual Studio 설정>
+- Windows SDK 10.0.17134.0 필요
+- Debug는 x86으로 실행
+- 전역으로 속성을 설정할 수 있는 방법
+보기
+    다른 창
+        속성 관리자
+            각 폴더에서 Microsoft.Cpp.Win32/x64.user의 속성을 수정하면 됨.
+
+<FBX SDK 설정>
+1. 오토데스크사의 FBX SDK를 다운받는다.
+- fbx20190_fbxsdk_vs2015_win
+2. 설치한다.
+3. 비주얼 스튜디오에서 프로젝트 속성
+- 구성 속성
+    C/C++
+        일반
+            추가 포함 디렉터리 : C:\Program Files\Autodesk\FBX\FBX SDK\2019.0\include 추가
+    링커
+        일반
+            추가 라이브러리 디렉터리 : C:\Program Files\Autodesk\FBX\FBX SDK\2019.0\lib 추가
+                                     C:\Program Files\Autodesk\FBX\FBX SDK\2019.0\lib\vs2015\x86\debug 추가
+        입력
+            추가 종속성 : libfbxsdk-md.lib 추가
+4. 헤더 추가
+- stdafx.h에서 #include <fbxsdk.h> 하면 Visual Studio 2017에선 다 작동할 듯
+5. x64는 에러가 발생함. x86으로만 디버깅 해야하는 듯
+
+<DirectX SDK 삭제>
+- DirectX SDK 설치하지 않아도 됨. 있으면 삭제해야 함.
+- C:\Program Files (x86)\Windows Kits\10\Include\10.0.17134.0\um 여기에
+- d3d 모든 정보가 다 있음
+
+<X3501 'main': entrypoint not found 문제>
+- ps.hlsl, vs.hlsl을 새로 추가했을 때 발생하는 문제
+- 각 hlsl 파일의 속성 진입
+- 구성 속성
+    일반
+        항목 형식 : 'HLSL 컴파일러' -> '빌드에 참여 안함' 으로 변경
+
+<C4996 'freopen': This function or variable may be unsafe. 
+Consider using freopen_s instead. 
+To disable deprecation, use _CRT_SECURE_NO_WARNINGS. 문제>
+- 구성 속성
+    C/C++
+        전처리기
+            전처리기 정의 : _CRT_SECURE_NO_WARNINGS 추가
+
+<C2903 'GetPropertyValue': 기호가 클래스 템플릿 또는 함수 템플릿이(가) 아닙니다.>
+- 구성 속성
+    C/C++
+        언어
+            준수 모드 : 예 -> 아니오

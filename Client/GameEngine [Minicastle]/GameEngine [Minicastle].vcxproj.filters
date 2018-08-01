@@ -1,0 +1,346 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="리소스 파일">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Main">
+      <UniqueIdentifier>{9a83bafe-a978-4ae6-b48f-5f049808f480}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="HLSL">
+      <UniqueIdentifier>{00cfe1ce-bb42-4dda-8e08-4666fb1093ee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DATA">
+      <UniqueIdentifier>{7a5d3c83-24e0-46e9-99ef-79d59478e2d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Files\Basic 2017">
+      <UniqueIdentifier>{92483a12-341a-46f9-ac58-7d78ecdb4b32}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files\_CoreSystem">
+      <UniqueIdentifier>{73f666e9-ef18-4152-b94e-527bedf41e25}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files\_GameEngine">
+      <UniqueIdentifier>{6a2f927e-f84d-425c-ba2e-497e326302c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files\_GameEngine\_RenderingEngine">
+      <UniqueIdentifier>{38b3f1f3-3af8-4f4b-b3dc-a4a91915d02b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files\_GameEngine\_RenderingEngine\_ModelManager">
+      <UniqueIdentifier>{ffd958e1-1028-4234-bf78-2ac970e204d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files\_GameEngine\_RenderingEngine\_ModelManager\_Model">
+      <UniqueIdentifier>{9d2e5216-bab2-4113-9a6d-c34eb8e39b96}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files\_GameEngine\_RenderingEngine\_ModelManager\_Model\FBX">
+      <UniqueIdentifier>{fc93cdc2-4c2e-4fee-a50c-d9f31a35225c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files\_GameEngine\_RenderingEngine\_TextManager">
+      <UniqueIdentifier>{37fdc8aa-b13d-40fb-9039-b480c83f4817}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files\_GameEngine\_HID">
+      <UniqueIdentifier>{b696ffa8-8b63-4fff-ab28-a318d223e83f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files\_GameEngine\_SystemInfo">
+      <UniqueIdentifier>{75fc0b5b-fb09-4e12-86a2-e252d0e4e3e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files\_ResourceManager">
+      <UniqueIdentifier>{7bbfde30-ae71-4c47-9405-d1f4021f226a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files\_GameEngine\_RenderingEngine\_Shader">
+      <UniqueIdentifier>{a21e3edc-1f4b-47f7-a3d8-0c64f32e2610}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files\_GameEngine\_RenderingEngine\_ModelManager\_Terrain">
+      <UniqueIdentifier>{14f817f9-4c19-4e15-823e-b206c8ac6b0b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files\_ResourceManager\_Texture">
+      <UniqueIdentifier>{3c8b1e5c-0cab-471c-b19c-9ef3edfc5a45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files\_ResourceManager\_Texture\_WICTextureLoader">
+      <UniqueIdentifier>{13e4467e-1cbc-412d-beb1-33b9ef51d73f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AlignedAllocationPolicy.h">
+      <Filter>Files\_CoreSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Direct3D.h">
+      <Filter>Files\_CoreSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="DxDefine.h">
+      <Filter>Files\_CoreSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Mouse_Keyboard.h">
+      <Filter>Files\_GameEngine\_HID</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model\FBX</Filter>
+    </ClInclude>
+    <ClInclude Include="MathHelper.h">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model\FBX</Filter>
+    </ClInclude>
+    <ClInclude Include="Utilities.h">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model\FBX</Filter>
+    </ClInclude>
+    <ClInclude Include="Vertex.h">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model\FBX</Filter>
+    </ClInclude>
+    <ClInclude Include="FBX.h">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model</Filter>
+    </ClInclude>
+    <ClInclude Include="Font.h">
+      <Filter>Files\_GameEngine\_RenderingEngine\_TextManager</Filter>
+    </ClInclude>
+    <ClInclude Include="FontShader.h">
+      <Filter>Files\_GameEngine\_RenderingEngine\_TextManager</Filter>
+    </ClInclude>
+    <ClInclude Include="Text.h">
+      <Filter>Files\_GameEngine\_RenderingEngine\_TextManager</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Files\_GameEngine\_RenderingEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelManager.h">
+      <Filter>Files\_GameEngine\_RenderingEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="TextManager.h">
+      <Filter>Files\_GameEngine\_RenderingEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="DataSheet.h">
+      <Filter>Files\_ResourceManager</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>Files\_ResourceManager</Filter>
+    </ClInclude>
+    <ClInclude Include="CPU.h">
+      <Filter>Files\_GameEngine\_SystemInfo</Filter>
+    </ClInclude>
+    <ClInclude Include="Timer.h">
+      <Filter>Files\_GameEngine\_SystemInfo</Filter>
+    </ClInclude>
+    <ClInclude Include="HID.h">
+      <Filter>Files\_GameEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="PhysicsEngine.h">
+      <Filter>Files\_GameEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderingEngine.h">
+      <Filter>Files\_GameEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="SystemInfo.h">
+      <Filter>Files\_GameEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Files\Basic 2017</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Files\Basic 2017</Filter>
+    </ClInclude>
+    <ClInclude Include="GameEngine.h">
+      <Filter>Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LocalLight.h">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager</Filter>
+    </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager</Filter>
+    </ClInclude>
+    <ClInclude Include="LocalLightAnimationShader.h">
+      <Filter>Files\_GameEngine\_RenderingEngine\_Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="LocalLightShader.h">
+      <Filter>Files\_GameEngine\_RenderingEngine\_Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkEngine.h">
+      <Filter>Files\_GameEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="FPS.h">
+      <Filter>Files\_GameEngine\_RenderingEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="SkyDome.h">
+      <Filter>Files\_GameEngine\_RenderingEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="SkyDomeShader.h">
+      <Filter>Files\_GameEngine\_RenderingEngine\_Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="Terrain.h">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager</Filter>
+    </ClInclude>
+    <ClInclude Include="TerrainShader.h">
+      <Filter>Files\_GameEngine\_RenderingEngine\_Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="QuadTree.h">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="Frustum.h">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Files\_ResourceManager\_Texture\_WICTextureLoader</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectXHelpers.h">
+      <Filter>Files\_ResourceManager\_Texture\_WICTextureLoader</Filter>
+    </ClInclude>
+    <ClInclude Include="PlatformHelpers.h">
+      <Filter>Files\_ResourceManager\_Texture\_WICTextureLoader</Filter>
+    </ClInclude>
+    <ClInclude Include="LoaderHelpers.h">
+      <Filter>Files\_ResourceManager\_Texture\_WICTextureLoader</Filter>
+    </ClInclude>
+    <ClInclude Include="dds.h">
+      <Filter>Files\_ResourceManager\_Texture\_WICTextureLoader</Filter>
+    </ClInclude>
+    <ClInclude Include="WICTextureLoader.h">
+      <Filter>Files\_ResourceManager\_Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="DDSTextureLoader.h">
+      <Filter>Files\_ResourceManager\_Texture</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Files\Basic 2017</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine.cpp">
+      <Filter>Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Direct3D.cpp">
+      <Filter>Files\_CoreSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="HID.cpp">
+      <Filter>Files\_GameEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderingEngine.cpp">
+      <Filter>Files\_GameEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>Files\_ResourceManager</Filter>
+    </ClCompile>
+    <ClCompile Include="Mouse_Keyboard.cpp">
+      <Filter>Files\_GameEngine\_HID</Filter>
+    </ClCompile>
+    <ClCompile Include="Model.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager</Filter>
+    </ClCompile>
+    <ClCompile Include="ModelManager.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="LocalLight.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager</Filter>
+    </ClCompile>
+    <ClCompile Include="FBX.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysicsEngine.cpp">
+      <Filter>Files\_GameEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="DataSheet.cpp">
+      <Filter>Files\_ResourceManager</Filter>
+    </ClCompile>
+    <ClCompile Include="Text.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine\_TextManager</Filter>
+    </ClCompile>
+    <ClCompile Include="TextManager.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="Font.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine\_TextManager</Filter>
+    </ClCompile>
+    <ClCompile Include="FontShader.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine\_TextManager</Filter>
+    </ClCompile>
+    <ClCompile Include="CPU.cpp">
+      <Filter>Files\_GameEngine\_SystemInfo</Filter>
+    </ClCompile>
+    <ClCompile Include="Timer.cpp">
+      <Filter>Files\_GameEngine\_SystemInfo</Filter>
+    </ClCompile>
+    <ClCompile Include="SystemInfo.cpp">
+      <Filter>Files\_GameEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="MathHelper.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model\FBX</Filter>
+    </ClCompile>
+    <ClCompile Include="Utilities.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model\FBX</Filter>
+    </ClCompile>
+    <ClCompile Include="LocalLightAnimationShader.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine\_Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="LocalLightShader.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine\_Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkEngine.cpp">
+      <Filter>Files\_GameEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="FPS.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="SkyDome.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="SkyDomeShader.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine\_Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="Terrain.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager</Filter>
+    </ClCompile>
+    <ClCompile Include="TerrainShader.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine\_Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="QuadTree.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="Frustum.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager</Filter>
+    </ClCompile>
+    <ClCompile Include="WICTextureLoader.cpp">
+      <Filter>Files\_ResourceManager\_Texture</Filter>
+    </ClCompile>
+    <ClCompile Include="DDSTextureLoader.cpp">
+      <Filter>Files\_ResourceManager\_Texture</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="HLSL\Font.ps">
+      <Filter>HLSL</Filter>
+    </None>
+    <None Include="HLSL\Font.vs">
+      <Filter>HLSL</Filter>
+    </None>
+    <None Include="HLSL\LocalLightAnimation_ps.hlsl">
+      <Filter>HLSL</Filter>
+    </None>
+    <None Include="HLSL\LocalLightAnimation_vs.hlsl">
+      <Filter>HLSL</Filter>
+    </None>
+    <None Include="HLSL\LocalLight_ps.hlsl">
+      <Filter>HLSL</Filter>
+    </None>
+    <None Include="HLSL\LocalLight_vs.hlsl">
+      <Filter>HLSL</Filter>
+    </None>
+    <None Include="HLSL\SkyDome_vs.hlsl">
+      <Filter>HLSL</Filter>
+    </None>
+    <None Include="HLSL\SkyDome_ps.hlsl">
+      <Filter>HLSL</Filter>
+    </None>
+    <None Include="HLSL\Terrain_ps.hlsl">
+      <Filter>HLSL</Filter>
+    </None>
+    <None Include="HLSL\Terrain_vs.hlsl">
+      <Filter>HLSL</Filter>
+    </None>
+  </ItemGroup>
+</Project>
