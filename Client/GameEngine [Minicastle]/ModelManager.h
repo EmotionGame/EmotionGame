@@ -2,6 +2,7 @@
 
 class Camera;
 class Model;
+class Player;
 class NetworkEngine;
 class QuadTree;
 
@@ -21,6 +22,9 @@ public:
 private:
 	void DetectChangingValue(int playerID);
 
+	unsigned int static __stdcall InitModelThread(void* p);
+	UINT WINAPI _InitModelThread();
+
 private:
 	ID3D11Device* m_device = nullptr; // 포인터를 받아와서 사용하므로 m_device->Shutdown() 금지
 	HWND m_hwnd;
@@ -30,9 +34,9 @@ private:
 	Camera* m_Camera = nullptr; // 포인터를 받아와서 사용하므로 m_Camera->Shutdown() 금지
 	QuadTree* m_QuadTree = nullptr;
 
-#define PLAYER_SIZE 1
-	std::queue<Model*>* m_InitModels = new std::queue<Model*>;
-	std::unordered_map<int, Model*>* m_ModelsUMap = new std::unordered_map<int, Model*>;
+#define PLAYER_SIZE 8
+	std::queue<Player*>* m_InitModels = new std::queue<Player*>;
+	std::unordered_map<int, Player*>* m_ModelsUMap = new std::unordered_map<int, Player*>;
 
 	int m_PlayerID = 0;
 	bool m_SetPlayerID = false;
@@ -52,4 +56,8 @@ private:
 	std::queue<Model*>* m_InitEvents = new std::queue<Model*>;
 	std::unordered_map<int, Model*>* m_EventUMap = new std::unordered_map<int, Model*>;
 
+	// test
+#define TEST_SIZE 1
+	std::mutex countMutex;
+	Model* m_tests[TEST_SIZE];
 };

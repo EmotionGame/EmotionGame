@@ -33,12 +33,6 @@
     <Filter Include="Files\_GameEngine\_RenderingEngine\_ModelManager">
       <UniqueIdentifier>{ffd958e1-1028-4234-bf78-2ac970e204d9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Files\_GameEngine\_RenderingEngine\_ModelManager\_Model">
-      <UniqueIdentifier>{9d2e5216-bab2-4113-9a6d-c34eb8e39b96}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Files\_GameEngine\_RenderingEngine\_ModelManager\_Model\FBX">
-      <UniqueIdentifier>{fc93cdc2-4c2e-4fee-a50c-d9f31a35225c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Files\_GameEngine\_RenderingEngine\_TextManager">
       <UniqueIdentifier>{37fdc8aa-b13d-40fb-9039-b480c83f4817}</UniqueIdentifier>
     </Filter>
@@ -63,6 +57,9 @@
     <Filter Include="Files\_ResourceManager\_Texture\_WICTextureLoader">
       <UniqueIdentifier>{13e4467e-1cbc-412d-beb1-33b9ef51d73f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Files\_GameEngine\_RenderingEngine\_ModelManager\_Model">
+      <UniqueIdentifier>{e3cce032-9708-43a6-a190-6895eaabd004}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AlignedAllocationPolicy.h">
@@ -76,21 +73,6 @@
     </ClInclude>
     <ClInclude Include="Mouse_Keyboard.h">
       <Filter>Files\_GameEngine\_HID</Filter>
-    </ClInclude>
-    <ClInclude Include="Material.h">
-      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model\FBX</Filter>
-    </ClInclude>
-    <ClInclude Include="MathHelper.h">
-      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model\FBX</Filter>
-    </ClInclude>
-    <ClInclude Include="Utilities.h">
-      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model\FBX</Filter>
-    </ClInclude>
-    <ClInclude Include="Vertex.h">
-      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model\FBX</Filter>
-    </ClInclude>
-    <ClInclude Include="FBX.h">
-      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model</Filter>
     </ClInclude>
     <ClInclude Include="Font.h">
       <Filter>Files\_GameEngine\_RenderingEngine\_TextManager</Filter>
@@ -200,6 +182,9 @@
     <ClInclude Include="DDSTextureLoader.h">
       <Filter>Files\_ResourceManager\_Texture</Filter>
     </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -238,9 +223,6 @@
     <ClCompile Include="LocalLight.cpp">
       <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager</Filter>
     </ClCompile>
-    <ClCompile Include="FBX.cpp">
-      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model</Filter>
-    </ClCompile>
     <ClCompile Include="PhysicsEngine.cpp">
       <Filter>Files\_GameEngine</Filter>
     </ClCompile>
@@ -267,12 +249,6 @@
     </ClCompile>
     <ClCompile Include="SystemInfo.cpp">
       <Filter>Files\_GameEngine</Filter>
-    </ClCompile>
-    <ClCompile Include="MathHelper.cpp">
-      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model\FBX</Filter>
-    </ClCompile>
-    <ClCompile Include="Utilities.cpp">
-      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model\FBX</Filter>
     </ClCompile>
     <ClCompile Include="LocalLightAnimationShader.cpp">
       <Filter>Files\_GameEngine\_RenderingEngine\_Shader</Filter>
@@ -309,6 +285,9 @@
     </ClCompile>
     <ClCompile Include="DDSTextureLoader.cpp">
       <Filter>Files\_ResourceManager\_Texture</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

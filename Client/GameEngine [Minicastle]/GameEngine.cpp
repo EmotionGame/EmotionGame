@@ -166,7 +166,7 @@ void GameEngine::Shutdown()
 	if (m_RenderingEngine)
 	{
 		m_RenderingEngine->Shutdown();
-		delete m_RenderingEngine;
+		delete m_RenderingEngine;	
 		m_RenderingEngine = nullptr;
 	}
 
@@ -323,7 +323,7 @@ float& GameEngine::GetDeltaTime()
 	return m_DeltaTime;
 }
 
-void GameEngine::InitializeWindows(int& screenWidth, int& screenHeight)
+void GameEngine::InitializeWindows(int& rScreenWidth, int& rScreenHeight)
 {
 	// 외부 포인터를 이 객체로 지정합니다
 	ApplicationHandle = this;
@@ -335,6 +335,11 @@ void GameEngine::InitializeWindows(int& screenWidth, int& screenHeight)
 	m_applicationName = L"GameEngine by 김성민B [010-8865-0312]";
 
 	// windows 클래스를 아래와 같이 설정합니다.
+	/*
+	CS_HREDRAW : 윈도우 너비가 이동하거나 사이즈가 조절되면 다시 그립니다.
+	CS_VREDRAW : 윈도우 높이가 이동하거나 사이즈가 조절되면 다시 그립니다.
+	CS_DBLCLKS : 더블 클릭 메시지를 받습니다.
+	*/
 	WNDCLASSEX wc;
 	wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
 	wc.lpfnWndProc = WndProc;
@@ -345,7 +350,7 @@ void GameEngine::InitializeWindows(int& screenWidth, int& screenHeight)
 	wc.hIconSm = wc.hIcon;
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
-	wc.lpszMenuName = NULL;
+	wc.lpszMenuName = NULL; // 메뉴바 설정
 	wc.lpszClassName = m_applicationName;
 	wc.cbSize = sizeof(WNDCLASSEX);
 
@@ -353,8 +358,8 @@ void GameEngine::InitializeWindows(int& screenWidth, int& screenHeight)
 	RegisterClassEx(&wc);
 
 	// 모니터 화면의 해상도를 읽어옵니다
-	screenWidth = GetSystemMetrics(SM_CXSCREEN);
-	screenHeight = GetSystemMetrics(SM_CYSCREEN);
+	rScreenWidth = GetSystemMetrics(SM_CXSCREEN);
+	rScreenHeight = GetSystemMetrics(SM_CYSCREEN);
 
 	int posX = 0;
 	int posY = 0;
@@ -366,8 +371,8 @@ void GameEngine::InitializeWindows(int& screenWidth, int& screenHeight)
 		DEVMODE dmScreenSettings;
 		memset(&dmScreenSettings, 0, sizeof(dmScreenSettings));
 		dmScreenSettings.dmSize = sizeof(dmScreenSettings);
-		dmScreenSettings.dmPelsWidth = (unsigned long)screenWidth;
-		dmScreenSettings.dmPelsHeight = (unsigned long)screenHeight;
+		dmScreenSettings.dmPelsWidth = (unsigned long)rScreenWidth;
+		dmScreenSettings.dmPelsHeight = (unsigned long)rScreenHeight;
 		dmScreenSettings.dmBitsPerPel = 32;
 		dmScreenSettings.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
 
@@ -377,22 +382,31 @@ void GameEngine::InitializeWindows(int& screenWidth, int& screenHeight)
 	else
 	{
 		// 윈도우 모드의 경우 크기를 지정합니다.
-		screenWidth = m_screenWidth;
-		screenHeight = m_screenHeight;
+		rScreenWidth = m_screenWidth;
+		rScreenHeight = m_screenHeight;
 
 		// 윈도우 창을 가로, 세로의 정 가운데 오도록 합니다.
-		posX = (GetSystemMetrics(SM_CXSCREEN) - screenWidth) / 2;
-		posY = (GetSystemMetrics(SM_CYSCREEN) - screenHeight) / 2;
+		posX = (GetSystemMetrics(SM_CXSCREEN) - rScreenWidth) / 2;
+		posY = (GetSystemMetrics(SM_CYSCREEN) - rScreenHeight) / 2;
 	}
 
 	// 윈도우를 생성하고 핸들을 구합니다.
-	// WS_EX_ACCEPTFILES : 드래그 되는 파일을 받을 수 있습니다.
-	/*m_hwnd = CreateWindowEx(WS_EX_APPWINDOW | WS_EX_ACCEPTFILES, m_applicationName, m_applicationName,
-		WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUP,
-		posX, posY, screenWidth, screenHeight, NULL, NULL, m_hinstance, NULL);*/
+	/* 
+	// dwStyle 설정 부분
+	WS_EX_APPWINDOW : 윈도우가 보일 때 강제로 태스크 바 위에 있도록 합니다.
+	WS_EX_ACCEPTFILES : 드래그 되는 파일을 받을 수 있습니다.
+	WS_EX_CONTEXTHELP : 타이틀바에 ? 버튼을 생성합니다.
 
-	// 임시로 만든 창모드
-	m_hwnd = CreateWindowW(m_applicationName, m_applicationName, WS_OVERLAPPEDWINDOW, posX, posY, screenWidth, screenHeight, nullptr, nullptr, m_hinstance, nullptr);
+	// dwStyle 설정 부분
+	WS_CLIPCHILDREN : 부모 윈도우를 그릴때 자식 윈도우와 겹치는 부분은 그리지 않습니다.
+	WS_CLIPSIBLINGS : 차일드끼리 상호 겹친 영역은 그리기 영역에서 제외합니다.
+	WS_POPUP : 윈도우 타이틀바 제거합니다.
+	WS_SYSMENU : 시스템 메뉴를 가집니다. -> 닫기 버튼이 생깁니다.
+	WS_THICKFRAME : 크기를 조절할 수 있는 경계선을 가집니다.
+	*/
+	m_hwnd = CreateWindowEx(WS_EX_APPWINDOW | WS_EX_ACCEPTFILES, m_applicationName, m_applicationName,
+		WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_SYSMENU,
+		posX, posY, rScreenWidth, rScreenHeight, NULL, NULL, m_hinstance, NULL);
 
 	// 윈도우를 화면에 표시하고 포커스를 지정합니다
 	ShowWindow(m_hwnd, SW_SHOW);
@@ -447,6 +461,11 @@ void GameEngine::FrameConstraintProcess()
 			case FRAME_STATE::FPS_15:
 			{
 				m_FrameTimeLimit[i] = 66.666f;
+				break;
+			}
+			case FRAME_STATE::FPS_24:
+			{
+				m_FrameTimeLimit[i] = 41.666f;
 				break;
 			}
 			case FRAME_STATE::FPS_30:

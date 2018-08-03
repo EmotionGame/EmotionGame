@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="리소스 파일">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Basic 2017">
+      <UniqueIdentifier>{0c08a9b9-fdd2-40f4-bd0f-571447ab88ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Main">
+      <UniqueIdentifier>{9d4c542f-35a8-44c7-9864-72be3fa014b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files\_FBX">
+      <UniqueIdentifier>{c8d2080a-ab71-4099-8e29-42d5803498b5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="targetver.h">
+      <Filter>Basic 2017</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Basic 2017</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Basic 2017</Filter>
+    </ClInclude>
+    <ClInclude Include="FBX.h">
+      <Filter>Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>Files\_FBX</Filter>
+    </ClInclude>
+    <ClInclude Include="Vertex.h">
+      <Filter>Files\_FBX</Filter>
+    </ClInclude>
+    <ClInclude Include="MathHelper.h">
+      <Filter>Files\_FBX</Filter>
+    </ClInclude>
+    <ClInclude Include="Utilities.h">
+      <Filter>Files\_FBX</Filter>
+    </ClInclude>
+    <ClInclude Include="DroppedFileInfo.h">
+      <Filter>Files</Filter>
+    </ClInclude>
+    <ClInclude Include="KSM.h">
+      <Filter>Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FBXSampleCode.h">
+      <Filter>Files\_FBX</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Basic 2017</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="FBX.cpp">
+      <Filter>Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MathHelper.cpp">
+      <Filter>Files\_FBX</Filter>
+    </ClCompile>
+    <ClCompile Include="Utilities.cpp">
+      <Filter>Files\_FBX</Filter>
+    </ClCompile>
+    <ClCompile Include="DroppedFileInfo.cpp">
+      <Filter>Files</Filter>
+    </ClCompile>
+    <ClCompile Include="KSM.cpp">
+      <Filter>Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FBXSampleCode.cpp">
+      <Filter>Files\_FBX</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="ConvertingCustumFormat_FBX_to_KSM.rc">
+      <Filter>리소스 파일</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="small.ico">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="ConvertingCustumFormat_FBX_to_KSM.ico">
+      <Filter>리소스 파일</Filter>
+    </Image>
+  </ItemGroup>
+</Project>

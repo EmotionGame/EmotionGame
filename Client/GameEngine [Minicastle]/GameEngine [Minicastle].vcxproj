@@ -165,17 +165,15 @@
     <ClInclude Include="LoaderHelpers.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PlatformHelpers.h" />
+    <ClInclude Include="Player.h" />
     <ClInclude Include="QuadTree.h" />
     <ClInclude Include="TerrainShader.h" />
     <ClInclude Include="CPU.h" />
     <ClInclude Include="DataSheet.h" />
-    <ClInclude Include="FBX.h" />
     <ClInclude Include="Font.h" />
     <ClInclude Include="FontShader.h" />
     <ClInclude Include="FPS.h" />
     <ClInclude Include="LocalLightShader.h" />
-    <ClInclude Include="Material.h" />
-    <ClInclude Include="MathHelper.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="AlignedAllocationPolicy.h" />
     <ClInclude Include="Camera.h" />
@@ -201,22 +199,19 @@
     <ClInclude Include="TextManager.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Timer.h" />
-    <ClInclude Include="Utilities.h" />
-    <ClInclude Include="Vertex.h" />
     <ClInclude Include="WICTextureLoader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Frustum.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="QuadTree.cpp" />
     <ClCompile Include="TerrainShader.cpp" />
     <ClCompile Include="CPU.cpp" />
     <ClCompile Include="DataSheet.cpp" />
-    <ClCompile Include="FBX.cpp" />
     <ClCompile Include="Font.cpp" />
     <ClCompile Include="FontShader.cpp" />
     <ClCompile Include="FPS.cpp" />
     <ClCompile Include="LocalLightShader.cpp" />
-    <ClCompile Include="MathHelper.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Direct3D.cpp" />
@@ -245,7 +240,6 @@
     <ClCompile Include="TextManager.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Timer.cpp" />
-    <ClCompile Include="Utilities.cpp" />
     <ClCompile Include="WICTextureLoader.cpp" />
   </ItemGroup>
   <ItemGroup>

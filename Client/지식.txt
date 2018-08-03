@@ -7,3 +7,11 @@
 - 16byte 정렬해야함
 - https://docs.microsoft.com/en-us/windows/desktop/direct3dhlsl/dx-graphics-hlsl-packing-rules
 
+<프로그램에 파일 드래그 & 드랍하여 정보 획득하기>
+- 일단 CreateWindowEx()에서 WS_EX_ACCEPTFILES 설정
+- 파일이 드랍되면 WM_DROPFILES 메세지가 발생
+- 파일 정보 처리를 위해 #include <shellapi.h> 추가
+- 드랍된 항목의 개수 얻기 : int count = DragQueryFile((HDROP)handle, 0xFFFFFFFF, NULL, 0);
+- i번 항목의 경로를 path에 획득 : DragQueryFile((HDROP)ah_drop_info, i, temp_path, MAX_PATH);
+- 드랍된 항목이 파일인지 폴더인지 체크 : if(GetFileAttributes(temp_path) & FILE_ATTRIBUTE_DIRECTORY)
+- https://blog.naver.com/tipsware/221148420395

@@ -57,11 +57,11 @@ bool NetworkEngine::Initialize(HWND hwnd, char* pIP, char* pPort)
 		return false;
 	}
 
-	// 서버와 연결하지 않았을 때 테스트용
-	UserPacket test;
-	test.id = 10;
-	m_RecvUserPacketQueue->push(test);
-	m_ConnectFlag = true;
+	//// 서버와 연결하지 않았을 때 테스트용
+	//UserPacket test;
+	//test.id = 10;
+	//m_RecvUserPacketQueue->push(test);
+	//m_ConnectFlag = true;
 
 	/***** Winsock 초기화 *****/
 	if (WSAStartup(MAKEWORD(2, 2), &m_wsaData) != 0)

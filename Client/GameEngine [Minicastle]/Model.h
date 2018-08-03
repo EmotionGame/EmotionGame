@@ -1,20 +1,80 @@
 #pragma once
-#include "Material.h"
-#include "Utilities.h"
 
 class Texture;
 class LocalLightShader;
 class LocalLightAnimationShader;
-class FBX;
 class HID;
 
 class Model : public AlignedAllocationPolicy<16>
 {
 private:
-	enum ModelFormat {
-		FBX_FORMAT = 1,
-		OBJ_FORMAT = 2
+	struct Info
+	{
+		bool hasMaterial = 0;
+		unsigned int meshCount = 0;
+		unsigned int animStackCount = 0;
+		unsigned int poseCount = 0;
+		unsigned int boneCount = 0;
+		unsigned int clusterCount = 0;
+		unsigned int totalVertexCount = 0;
+		unsigned int totalPolygoncount = 0;
 	};
+	struct Vertex
+	{
+		XMFLOAT3 position = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		XMFLOAT3 normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		XMFLOAT2 uv = XMFLOAT2(0.0f, 0.0f);
+
+	};
+	struct VertexAnim
+	{
+		XMFLOAT3 position = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		XMFLOAT3 normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		XMFLOAT2 uv = XMFLOAT2(0.0f, 0.0f);
+		unsigned int boneIndex[4] = { 0, 0, 0, 0 };
+		float boneWeight[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	};
+	struct polygon
+	{
+		unsigned int indices[3] = { 0, 0, 0 };
+		unsigned int materialIndex = 0;
+	};
+	struct Material
+	{
+		unsigned int index = 0;
+		bool lambert = false;
+		bool phong = true;
+		XMFLOAT3 ambient = XMFLOAT3(0.05f, 0.05f, 0.05f);
+		XMFLOAT3 diffuse = XMFLOAT3(0.5f, 0.5f, 0.5f);
+		XMFLOAT3 specular = XMFLOAT3(0.2f, 0.2f, 0.2f);
+		XMFLOAT3 emissive = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		XMFLOAT3 reflection = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		float shininess = 64.0f;
+		float reflectionFactor = 0.0f;
+		float specularPower = 1.0f;
+		float transparencyFactor = 0.0f;
+	};
+	struct GlobalOffPosition
+	{
+		XMMATRIX globalOffPosition = XMMatrixIdentity();;
+	};
+	struct ClusterEachFrame
+	{
+		unsigned int index = 0;
+		XMMATRIX finalTransform = XMMatrixIdentity();;
+	};
+
+private:
+	bool LoadFBX2KSM(char* pFileName);
+
+	bool LoadFBXInfo(char* pFileName);
+	bool LoadHasAnimation(char* pFileName);
+	bool LoadVertex(char* pFileName, unsigned int meshCount);
+	bool LoadVertexAnim(char* pFileName, unsigned int meshCount);
+	bool LoadPolygon(char* pFileName, unsigned int meshCount);
+	bool LoadMaterial(char* pFileName, unsigned int meshCount);
+	bool LoadGlobalOffPosition(char* pFileName);
+	bool LoadFinalTransform(char* pFileName, unsigned int meshCount, unsigned int animStackCount);
 
 public:
 	Model();
@@ -22,9 +82,9 @@ public:
 	~Model();
 
 	bool Initialize(ID3D11Device* pDevice, HWND hwnd, HID* pHID, char* pModelFileName, WCHAR* pTextureFileName,
-		XMFLOAT3 modelcaling, XMFLOAT3 modelRotation, XMFLOAT3 modelTranslation, bool specularZero);
+		XMFLOAT3 modelcaling, XMFLOAT3 modelRotation, XMFLOAT3 modelTranslation, bool specularZero, unsigned int animStackNum);
 	void Shutdown();
-	bool Render(ID3D11DeviceContext* pDeviceContext, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, XMFLOAT3 cameraPosition, float frameTime);
+	bool Render(ID3D11DeviceContext* pDeviceContext, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, XMFLOAT3 cameraPosition, float deltaTime);
 
 	void MoveObejctToLookAt(XMFLOAT3 value);
 	void MoveObjectToLookAtUp(XMFLOAT3 value);
@@ -40,13 +100,16 @@ public:
 	XMFLOAT3 GetCameraPosition();
 
 	bool IsActive();
+	bool IsInitilized();
+	void SetInitStarted(bool initStart);
+	bool GetInitStarted();
 
 private:
 	bool LoadModel(char* pFileName);
-	bool InitializeBuffers(ID3D11Device* pDevice);
-	bool InitializeAnimationBuffers(ID3D11Device* pDevice);
+	bool InitializeBuffers(ID3D11Device* pDevice, unsigned int meshCount);
+	bool InitializeAnimationBuffers(ID3D11Device* pDevice, unsigned int meshCount);
 	bool LoadTexture(ID3D11Device* pDevice, WCHAR* pFileName);
-	void RenderBuffers(ID3D11DeviceContext* pDeviceContext, unsigned int i);
+	void RenderBuffers(ID3D11DeviceContext* pDeviceContext, unsigned int meshCount);
 
 	void ReleaseTexture();
 	void ShutdownBuffers();
@@ -55,18 +118,17 @@ private:
 	bool Last4strcmp(const char* pFileName, const char* pLast4FileName);
 
 	XMMATRIX CalculateWorldMatrix();
-	XMMATRIX ConvertFbxAMatrixtoXMMATRIX(FbxAMatrix fbxAMatrix);
 
 private:
 	HWND m_hwnd;
 
 	bool m_ActiveFlag = true;
 
-	std::vector<ID3D11Buffer*>* m_VertexBuffer = new std::vector<ID3D11Buffer*>;
-	std::vector<ID3D11Buffer*>* m_IndexBuffer = new std::vector<ID3D11Buffer*>;
+	std::unordered_map<unsigned int, ID3D11Buffer*>* m_VertexBuffer = new std::unordered_map<unsigned int, ID3D11Buffer*>;
+	std::unordered_map<unsigned int, ID3D11Buffer*>* m_IndexBuffer = new std::unordered_map<unsigned int, ID3D11Buffer*>;
 
-	std::vector<ID3D11Buffer*>* m_AnimationVertexBuffer = new std::vector<ID3D11Buffer*>;
-	std::vector<ID3D11Buffer*>* m_AnimationIndexBuffer = new std::vector<ID3D11Buffer*>;
+	std::unordered_map<unsigned int, ID3D11Buffer*>* m_AnimationVertexBuffer = new std::unordered_map<unsigned int, ID3D11Buffer*>;
+	std::unordered_map<unsigned int, ID3D11Buffer*>* m_AnimationIndexBuffer = new std::unordered_map<unsigned int, ID3D11Buffer*>;
 
 	XMMATRIX m_worldMatrix = XMMatrixIdentity(); // 단위행렬로 초기화
 
@@ -93,44 +155,51 @@ private:
 
 	Texture* m_Texture = nullptr;
 
-	/***** FBX에서 로드한 데이터들 : 시작 *****/
-	std::vector<Animation*>* m_AnimationStackVector;
-	std::vector<FbxNode*>* m_CameraNodeVector;
-	std::vector<FbxPose*>* m_PoseVector;
+	/***** KSM에서 로드한 데이터들 : 시작 *****/
+#define BUFFER_SIZE 4096
 
-	Skeleton* m_Skeleton;
-	bool m_HasAnimation;
+	Info m_Info;
+	std::vector<bool> m_HasAnimation;
+	std::unordered_map<unsigned int, std::vector<Vertex>> m_Vertex;
+	std::unordered_map<unsigned int, std::vector<VertexAnim>> m_VertexAnim;
+	std::vector<std::vector<polygon>> m_polygon;
+	std::unordered_map<unsigned int, std::unordered_map<unsigned int, Material>> m_Material;
+	std::vector<XMMATRIX> m_GlobalOffPosition;
 
-	unsigned int m_MeshCount;
-	std::vector<FbxNode*>* m_MeshNodeVector;
-	std::vector<bool>* m_HasNormalVector;
-	std::vector<bool>* m_HasUVVector;
-	std::vector<unsigned int>* m_TriangleCountVector;
-	std::vector<TrianglePolygonVector*>* m_TrianglesVector;
-	std::vector<PNTIWVertexVector*>* m_VerticesVector;
-
-	std::vector<MaterialUnorderedMap*>* m_MaterialLookUpVector;
-
-	std::vector<LightCache*>* m_LightCacheVector;
-	/***** FBX에서 로드한 데이터들 : 종료 *****/
+	struct ClusterMatrix
+	{
+		std::vector<XMMATRIX> finalTransform;
+	};
+	struct Animation
+	{
+		// std::unordered_map<클러스터 번호, 해당 클러스터의 각 프레임마다의 최종 변환을 저장하는 행렬>
+		std::unordered_map<unsigned int, ClusterMatrix> m_Animation;
+	};
+	// std::unordered_map<메시 번호, 애니메이션 스택에 따른 각 애니메이션 벡터>
+	std::unordered_map<unsigned int, std::vector<Animation>> m_Animations;
+	/***** KSM에서 로드한 데이터들 : 종료 *****/
 
 	/***** Animation 관리 : 시작 *****/
-	FbxTime mCurrentTime, mFrameTime;
-	float m_SumTime = 0.0f;
 	unsigned int m_AnimStackIndex = 0;
+	unsigned int m_AnimFrameCount = 0;
+	float m_SumDeltaTime = 0.0f;
+	XMMATRIX m_FinalTransform[BONE_FINAL_TRANSFORM_SIZE];
 	/***** Animation 관리 : 종료 *****/
 
-	XMMATRIX m_FinalTransform[BONE_FINAL_TRANSFORM_SIZE];
-
+	/***** Material 관리 : 시작 *****/
 	bool m_SpecularZero = false; // 스펙큘러를 없애고 싶으면 true
 	XMFLOAT4 m_AmbientColor[MATERIAL_SIZE];
 	XMFLOAT4 m_DiffuseColor[MATERIAL_SIZE];
 	XMFLOAT4 m_SpecularPower[MATERIAL_SIZE];
 	XMFLOAT4 m_SpecularColor[MATERIAL_SIZE];
 	XMFLOAT3 m_LightDirection = XMFLOAT3(-1.0f, -1.0f, 1.0f);
-
-	unsigned int m_ModelFormat = 0;
-	void* m_Model = nullptr;
+	/***** Material 관리 : 종료 *****/
 
 	HID* m_HID = nullptr; // 포인터를 받아와서 사용하므로 m_HID->Shutdown() 금지
+
+	std::mutex m_InitMutex;
+	bool m_Initilized = false;
+	
+	std::mutex m_InitStartMutex;
+	bool m_InitSatrt = false;
 };

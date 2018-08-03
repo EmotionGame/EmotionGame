@@ -2,8 +2,11 @@
 #include "NetworkEngine.h"
 #include "Camera.h"
 #include "Model.h"
+#include "Player.h"
 #include "QuadTree.h"
 #include "ModelManager.h"
+
+static int testCount = 0;
 
 ModelManager::ModelManager()
 {
@@ -13,6 +16,30 @@ ModelManager::ModelManager(const ModelManager& other)
 }
 ModelManager::~ModelManager()
 {
+}
+
+unsigned int __stdcall ModelManager::InitModelThread(void* p)
+{
+	static_cast<ModelManager*>(p)->_InitModelThread();
+
+	return true;
+}
+UINT WINAPI ModelManager::_InitModelThread()
+{
+	countMutex.lock();
+	int index = testCount;
+	countMutex.unlock();
+
+	m_tests[index]->Initialize(m_device, m_hwnd, m_HID,
+		"Data/KSM/X_Bot/X_Bot", L"Data/KSM/Default/Default_1.dds",
+		XMFLOAT3(0.001f, 0.001f, 0.001f), XMFLOAT3(10.0f * index, 0.0f, -50.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), false, 0);
+	
+	countMutex.lock();
+	testCount++;
+	countMutex.unlock();
+
+	_endthreadex(0);
+	return true;
 }
 
 bool ModelManager::Initialize(ID3D11Device* pDevice, HWND hwnd, HID* pHID, NetworkEngine* pNetworkEngine, Camera* pCamera, QuadTree* pQuadTree)
@@ -28,26 +55,29 @@ bool ModelManager::Initialize(ID3D11Device* pDevice, HWND hwnd, HID* pHID, Netwo
 	m_Camera = pCamera;
 	m_QuadTree = pQuadTree;
 
-	/***** 플레이어 모델 : 시작 *****/
-	for (int i = 0; i < PLAYER_SIZE; i++)
-	{
-		m_InitModels->push(new Model);
-		if (!m_InitModels->back())
-		{
-			MessageBox(m_hwnd, L"ModelManager.cpp : m_Models.back()", L"Error", MB_OK);
-			return false;
-		}
-		if (!m_InitModels->back()->Initialize(m_device, m_hwnd, m_HID,
-			"Data/FBX/PoliceOfficer/PoliceOfficer.fbx", L"Data/FBX/PoliceOfficer/PoliceOfficer.dds",
-			XMFLOAT3(0.05f, 0.05f, 0.05f), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), false))
-		{
-			MessageBox(m_hwnd, L"ModelManager.cpp : m_InitModels->back()->Initialize", L"Error", MB_OK);
-			return false;
-		}
+	for (int i =0; i < TEST_SIZE; i++)
+		m_tests[i] = new Model;
 
-		// 변화 감지 초기화
-		m_DetectChanging[i] = false;
-	}
+	/***** 플레이어 모델 : 시작 *****/
+	//for (int i = 0; i < PLAYER_SIZE; i++)
+	//{
+	//	m_InitModels->push(new Player);
+	//	if (!m_InitModels->back())
+	//	{
+	//		MessageBox(m_hwnd, L"ModelManager.cpp : m_Models.back()", L"Error", MB_OK);
+	//		return false;
+	//	}
+	//	if (!m_InitModels->back()->Initialize(m_device, m_hwnd, m_HID,
+	//		"Data/KSM/X_Bot/X_Bot", L"Data/KSM/Default/Default_1.dds",
+	//		XMFLOAT3(0.001f, 0.001f, 0.001f), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), false, 0))
+	//	{
+	//		MessageBox(m_hwnd, L"ModelManager.cpp : m_InitModels->back()->Initialize", L"Error", MB_OK);
+	//		return false;
+	//	}
+
+	//	// 변화 감지 초기화
+	//	m_DetectChanging[i] = false;
+	//}
 	/***** 플레이어 모델 : 종료 *****/
 
 	/***** 오브젝트 모델 : 시작 *****/
@@ -105,6 +135,23 @@ void ModelManager::Shutdown()
 
 bool ModelManager::Render(ID3D11DeviceContext* pDeviceContext, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, XMFLOAT3 cameraPosition, float deltaTime)
 {
+	for (int i = 0; i < TEST_SIZE; i++)
+	{
+		if (!m_tests[i]->IsInitilized())
+		{
+			if (!m_tests[i]->GetInitStarted())
+			{
+				_beginthreadex(NULL, 0, InitModelThread, (LPVOID)this, 0, NULL);
+				m_tests[i]->SetInitStarted(true);
+			}
+		}
+		else
+		{
+			m_tests[i]->Render(pDeviceContext, viewMatrix, projectionMatrix, cameraPosition, deltaTime);
+		}
+	}
+
+
 	// 네트워크 연결에 성공했을 때만 실행
 	if (m_NetworkEngine->GetConnectFlag())
 	{
@@ -127,7 +174,7 @@ bool ModelManager::Render(ID3D11DeviceContext* pDeviceContext, XMMATRIX viewMatr
 			// 키로 넘겨준 id에 해당되는 원소가 없고 초기화 해놓은 모델이 남아 있으면
 			if ((m_ModelsUMap->find(id) == m_ModelsUMap->end()) && !m_InitModels->empty())
 			{
-				m_ModelsUMap->emplace(std::pair<int, Model*>(id, m_InitModels->front()));
+				m_ModelsUMap->emplace(std::pair<int, Player*>(id, m_InitModels->front()));
 				m_InitModels->pop();
 				printf("POP >> ModelManager.cpp : m_ModelsUMap[id] = m_InitModels->front();\n");
 
