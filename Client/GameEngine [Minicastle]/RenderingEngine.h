@@ -63,5 +63,6 @@ private:
 	int m_deltaTimeCursor = 0;
 	bool m_checkInitDeltaTime = false;
 	float m_averageDeltaTime = 0.0f;
+	bool m_FirstRendered = false;
 	/***** 평균 델타 타임 구하는 구간 : 종료 *****/
 };

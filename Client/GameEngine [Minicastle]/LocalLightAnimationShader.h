@@ -11,7 +11,7 @@ private:
 
 public:
 	LocalLightAnimationShader();
-	LocalLightAnimationShader(const LocalLightAnimationShader& other);
+	LocalLightAnimationShader(const LocalLightAnimationShader& rOther);
 	~LocalLightAnimationShader();
 
 	bool Initialize(ID3D11Device* pDevice, HWND hwnd);

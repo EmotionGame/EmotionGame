@@ -401,33 +401,38 @@ bool RenderingEngine::Render(float deltaTime)
 	// 버퍼의 내용을 화면에 출력합니다
 	m_Direct3D->EndScene();
 
+	// 최초 렌더링 Flag
+	if (!m_FirstRendered)
+		m_FirstRendered = true;
+
 	return true;
 }
 
 void RenderingEngine::CaluateAverageDeltaTime(float deltaTime)
 {
 	/***** 평균 델타 타임 구하는 구간 : 시작 *****/
-	m_deltaTimeArr[m_deltaTimeCursor++] = deltaTime;
+	if (m_FirstRendered)
+	{
+		m_deltaTimeArr[m_deltaTimeCursor++] = deltaTime;
 
-	if (!m_checkInitDeltaTime && (m_deltaTimeCursor == DELTA_TIME_SIZE))
-		m_checkInitDeltaTime = true;
+		if (!m_checkInitDeltaTime && (m_deltaTimeCursor == DELTA_TIME_SIZE))
+			m_checkInitDeltaTime = true;
 
-	if (m_deltaTimeCursor >= DELTA_TIME_SIZE) // #define DELTA_TIME_SIZE 1000
-		m_deltaTimeCursor = 0;
+		if (m_deltaTimeCursor >= DELTA_TIME_SIZE) // #define DELTA_TIME_SIZE 1000
+			m_deltaTimeCursor = 0;
 
-	float deltaTimeSum = 0.0f;
+		float deltaTimeSum = 0.0f;
 
-	if (m_checkInitDeltaTime) {
-		for (int i = 0; i < DELTA_TIME_SIZE; i++)
-			deltaTimeSum += m_deltaTimeArr[i];
-		m_averageDeltaTime = deltaTimeSum / (float)DELTA_TIME_SIZE;
-	}
-	else {
-		for (int i = 0; i < m_deltaTimeCursor; i++)
-			deltaTimeSum += m_deltaTimeArr[i];
-		m_averageDeltaTime = deltaTimeSum / (float)m_deltaTimeCursor;
+		if (m_checkInitDeltaTime) {
+			for (int i = 0; i < DELTA_TIME_SIZE; i++)
+				deltaTimeSum += m_deltaTimeArr[i];
+			m_averageDeltaTime = deltaTimeSum / (float)DELTA_TIME_SIZE;
+		}
+		else {
+			for (int i = 0; i < m_deltaTimeCursor; i++)
+				deltaTimeSum += m_deltaTimeArr[i];
+			m_averageDeltaTime = deltaTimeSum / (float)m_deltaTimeCursor;
+		}
 	}
 	/***** 평균 델타 타임 구하는 구간 : 종료 *****/
-
-
-}
+	}

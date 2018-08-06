@@ -64,7 +64,7 @@ bool Model::LoadFBXInfo(char* pFileName)
 
 
 	/***** FBX 데이터 로드 : 시작 *****/
-	FILE* pFileRB = fopen(result, "rb");
+	FILE* pFileRB = _fsopen(result, "rb", SH_DENYNO);
 	if (pFileRB == NULL)
 	{
 		return false;
@@ -103,7 +103,7 @@ bool Model::LoadHasAnimation(char* pFileName)
 
 
 	/***** FBX 데이터 로드 : 시작 *****/
-	FILE* pFileRB = fopen(result, "rb");
+	FILE* pFileRB = _fsopen(result, "rb", SH_DENYNO);
 	if (pFileRB == NULL)
 	{
 		return false;
@@ -207,7 +207,7 @@ bool Model::LoadVertex(char* pFileName, unsigned int meshCount)
 
 
 	/***** FBX 데이터 로드 : 시작 *****/
-	FILE* pFileRB = fopen(result, "rb");
+	FILE* pFileRB = _fsopen(result, "rb", SH_DENYNO);
 	if (pFileRB == NULL)
 	{
 		return false;
@@ -312,7 +312,7 @@ bool Model::LoadVertexAnim(char* pFileName, unsigned int meshCount)
 
 	
 	/***** FBX 데이터 로드 : 시작 *****/
-	FILE* pFileRB = fopen(result, "rb");
+	FILE* pFileRB = _fsopen(result, "rb", SH_DENYNO);
 	if (pFileRB == NULL)
 	{
 		return false;
@@ -417,7 +417,7 @@ bool Model::LoadPolygon(char* pFileName, unsigned int meshCount)
 
 
 	/***** FBX 데이터 로드 : 시작 *****/
-	FILE* pFileRB = fopen(result, "rb");
+	FILE* pFileRB = _fsopen(result, "rb", SH_DENYNO);
 	if (pFileRB == NULL)
 	{
 		return false;
@@ -522,7 +522,7 @@ bool Model::LoadMaterial(char* pFileName, unsigned int meshCount)
 
 	
 	/***** FBX 데이터 로드 : 시작 *****/
-	FILE* pFileRB = fopen(result, "rb");
+	FILE* pFileRB = _fsopen(result, "rb", SH_DENYNO);
 	if (pFileRB == NULL)
 	{
 		return false;
@@ -626,7 +626,7 @@ bool Model::LoadGlobalOffPosition(char* pFileName)
 
 
 	/***** FBX 데이터 로드 : 시작 *****/
-	FILE* pFileRB = fopen(result, "rb");
+	FILE* pFileRB = _fsopen(result, "rb", SH_DENYNO);
 	if (pFileRB == NULL)
 	{
 		return false;
@@ -734,7 +734,7 @@ bool Model::LoadFinalTransform(char* pFileName, unsigned int meshCount, unsigned
 
 
 	/***** FBX 데이터 로드 : 시작 *****/
-	FILE* pFileRB = fopen(result, "rb");
+	FILE* pFileRB = _fsopen(result, "rb", SH_DENYNO);
 	if (pFileRB == NULL)
 	{
 		return false;
@@ -860,7 +860,7 @@ Model::Model()
 {
 }
 
-Model::Model(const Model& other)
+Model::Model(const Model& rOther)
 {
 }
 
@@ -883,6 +883,13 @@ bool Model::Initialize(ID3D11Device* pDevice, HWND hwnd, HID* pHID, char* pModel
 	m_ModelRotation = modelRotation;
 	m_ModelTranslation = modelTranslation;
 
+	// 위치 확인을 위한 난수 생성
+	std::random_device rd;
+	std::uniform_real_distribution<float> xRange(0.0f, 20.0f);
+	std::uniform_real_distribution<float> zRange(-10.0f, 0.0f);
+	m_ModelTranslation.x = static_cast<float>(xRange(rd));
+	m_ModelTranslation.z = static_cast<float>(zRange(rd));
+	
 	// 머터리얼 값들 초기화
 	m_SpecularZero = specularZero;
 
@@ -1199,21 +1206,6 @@ bool Model::IsInitilized()
 	return init;
 }
 
-void Model::SetInitStarted(bool initStart)
-{
-	m_InitStartMutex.lock();
-	m_InitSatrt = initStart;
-	m_InitStartMutex.unlock();
-}
-bool Model::GetInitStarted()
-{
-	m_InitStartMutex.lock();
-	bool initStart = m_InitSatrt;
-	m_InitStartMutex.unlock();
-
-	return initStart;
-}
-
 bool Model::LoadModel(char* pFileName)
 {
 	LoadFBX2KSM(pFileName);
@@ -1223,6 +1215,8 @@ bool Model::LoadModel(char* pFileName)
 
 bool Model::InitializeBuffers(ID3D11Device* pDevice, unsigned int meshCount)
 {
+	HRESULT hResult;
+
 	VertexType* m_vertices = new VertexType[m_Vertex.at(meshCount).size()];
 	for (unsigned int i = 0; i < m_Vertex.at(meshCount).size(); i++)
 	{
@@ -1267,7 +1261,9 @@ bool Model::InitializeBuffers(ID3D11Device* pDevice, unsigned int meshCount)
 
 	// 이제 정점 버퍼를 만듭니다.
 	ID3D11Buffer* vertexBuffer;
-	if (FAILED(pDevice->CreateBuffer(&vertexBufferDesc, &vertexData, &vertexBuffer)))
+	
+	hResult = pDevice->CreateBuffer(&vertexBufferDesc, &vertexData, &vertexBuffer);
+	if (FAILED(hResult))
 	{
 		MessageBox(m_hwnd, L"Model.cpp : device->CreateBuffer(&vertexBufferDesc, &vertexData, &m_vertexBuffer)", L"Error", MB_OK);
 		return false;
@@ -1291,7 +1287,9 @@ bool Model::InitializeBuffers(ID3D11Device* pDevice, unsigned int meshCount)
 
 	// 인덱스 버퍼를 생성합니다.
 	ID3D11Buffer* indexBuffer;
-	if (FAILED(pDevice->CreateBuffer(&indexBufferDesc, &indexData, &indexBuffer)))
+	
+	hResult = pDevice->CreateBuffer(&indexBufferDesc, &indexData, &indexBuffer);
+	if (FAILED(hResult))
 	{
 		MessageBox(m_hwnd, L"Model.cpp : device->CreateBuffer(&indexBufferDesc, &indexData, &m_indexBuffer)", L"Error", MB_OK);
 		return false;
@@ -1310,6 +1308,8 @@ bool Model::InitializeBuffers(ID3D11Device* pDevice, unsigned int meshCount)
 
 bool Model::InitializeAnimationBuffers(ID3D11Device* pDevice, unsigned int meshCount)
 {
+	HRESULT hResult;
+
 	AnimationVertexType* m_vertices = new AnimationVertexType[m_VertexAnim.at(meshCount).size()];
 	for (unsigned int i = 0; i < m_VertexAnim.at(meshCount).size(); i++)
 	{
@@ -1360,7 +1360,9 @@ bool Model::InitializeAnimationBuffers(ID3D11Device* pDevice, unsigned int meshC
 
 	// 이제 정점 버퍼를 만듭니다.
 	ID3D11Buffer* animationVertexBuffer;
-	if (FAILED(pDevice->CreateBuffer(&vertexBufferDesc, &vertexData, &animationVertexBuffer)))
+	
+	hResult = pDevice->CreateBuffer(&vertexBufferDesc, &vertexData, &animationVertexBuffer);
+	if (FAILED(hResult))
 	{
 		MessageBox(m_hwnd, L"Model.cpp : device->CreateBuffer(&vertexBufferDesc, &vertexData, &m_vertexBuffer)", L"Error", MB_OK);
 		return false;
@@ -1384,7 +1386,8 @@ bool Model::InitializeAnimationBuffers(ID3D11Device* pDevice, unsigned int meshC
 
 	// 인덱스 버퍼를 생성합니다.
 	ID3D11Buffer* animationIndexBuffer;
-	if (FAILED(pDevice->CreateBuffer(&indexBufferDesc, &indexData, &animationIndexBuffer)))
+	hResult = pDevice->CreateBuffer(&indexBufferDesc, &indexData, &animationIndexBuffer);
+	if (FAILED(hResult))
 	{
 		MessageBox(m_hwnd, L"Model.cpp : device->CreateBuffer(&indexBufferDesc, &indexData, &m_indexBuffer)", L"Error", MB_OK);
 		return false;
@@ -1403,6 +1406,8 @@ bool Model::InitializeAnimationBuffers(ID3D11Device* pDevice, unsigned int meshC
 
 bool Model::LoadTexture(ID3D11Device* pDevice, WCHAR* pFileName)
 {
+	bool result;
+
 	// 텍스처 오브젝트를 생성한다.
 	m_Texture = new Texture;
 	if (!m_Texture)
@@ -1412,7 +1417,8 @@ bool Model::LoadTexture(ID3D11Device* pDevice, WCHAR* pFileName)
 	}
 
 	// 텍스처 오브젝트를 초기화한다.
-	if (!m_Texture->Initialize(pDevice, m_hwnd, pFileName))
+	result = m_Texture->Initialize(pDevice, m_hwnd, pFileName);
+	if (!result)
 	{
 		MessageBox(m_hwnd, L"Model.cpp : m_Texture->Initialize(device, filename)", L"Error", MB_OK);
 		return false;

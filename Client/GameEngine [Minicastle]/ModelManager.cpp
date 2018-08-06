@@ -6,8 +6,6 @@
 #include "QuadTree.h"
 #include "ModelManager.h"
 
-static int testCount = 0;
-
 ModelManager::ModelManager()
 {
 }
@@ -18,25 +16,26 @@ ModelManager::~ModelManager()
 {
 }
 
-unsigned int __stdcall ModelManager::InitModelThread(void* p)
+unsigned int __stdcall ModelManager::InitPlayerModelThread(void* p)
 {
-	static_cast<ModelManager*>(p)->_InitModelThread();
+	static_cast<ModelManager*>(p)->_InitPlayerModelThread();
 
 	return true;
 }
-UINT WINAPI ModelManager::_InitModelThread()
+UINT WINAPI ModelManager::_InitPlayerModelThread()
 {
-	countMutex.lock();
-	int index = testCount;
-	countMutex.unlock();
+	WaitForSingleObject(m_InitSemaphore, INFINITE);
 
-	m_tests[index]->Initialize(m_device, m_hwnd, m_HID,
-		"Data/KSM/X_Bot/X_Bot", L"Data/KSM/Default/Default_1.dds",
-		XMFLOAT3(0.001f, 0.001f, 0.001f), XMFLOAT3(10.0f * index, 0.0f, -50.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), false, 0);
-	
-	countMutex.lock();
-	testCount++;
-	countMutex.unlock();
+	Player* player = new Player;
+	player->Initialize(m_device, m_hwnd, m_HID,
+		"Data/KSM/PoliceOfficer/PoliceOfficer", L"Data/KSM/PoliceOfficer/PoliceOfficer.dds",
+		XMFLOAT3(0.01f, 0.01f, 0.01f), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, -10.0f), false, 0);
+
+	ReleaseSemaphore(m_InitSemaphore, 1, NULL);
+
+	m_testQueueMutex.lock();
+	m_testVector.push_back(player);
+	m_testQueueMutex.unlock();
 
 	_endthreadex(0);
 	return true;
@@ -55,50 +54,13 @@ bool ModelManager::Initialize(ID3D11Device* pDevice, HWND hwnd, HID* pHID, Netwo
 	m_Camera = pCamera;
 	m_QuadTree = pQuadTree;
 
-	for (int i =0; i < TEST_SIZE; i++)
-		m_tests[i] = new Model;
+	// 동시에 최대 4개 스레드만 모델을 로드하도록 제한하는 세마포어
+	m_InitSemaphore = CreateSemaphore(NULL, 4, 4, NULL);
 
-	/***** 플레이어 모델 : 시작 *****/
-	//for (int i = 0; i < PLAYER_SIZE; i++)
-	//{
-	//	m_InitModels->push(new Player);
-	//	if (!m_InitModels->back())
-	//	{
-	//		MessageBox(m_hwnd, L"ModelManager.cpp : m_Models.back()", L"Error", MB_OK);
-	//		return false;
-	//	}
-	//	if (!m_InitModels->back()->Initialize(m_device, m_hwnd, m_HID,
-	//		"Data/KSM/X_Bot/X_Bot", L"Data/KSM/Default/Default_1.dds",
-	//		XMFLOAT3(0.001f, 0.001f, 0.001f), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), false, 0))
-	//	{
-	//		MessageBox(m_hwnd, L"ModelManager.cpp : m_InitModels->back()->Initialize", L"Error", MB_OK);
-	//		return false;
-	//	}
-
-	//	// 변화 감지 초기화
-	//	m_DetectChanging[i] = false;
-	//}
-	/***** 플레이어 모델 : 종료 *****/
-
-	/***** 오브젝트 모델 : 시작 *****/
-
-	/***** 오브젝트 모델 : 종료 *****/
-
-	/***** 이벤트 모델 : 시작 *****/
-	/*m_InitEvents->push(new Model);
-	if (!m_InitEvents->back())
+	for (int i = 0; i < 100; i++)
 	{
-		MessageBox(m_hwnd, L"ModelManager.cpp : m_Models.back()", L"Error", MB_OK);
-		return false;
+		_beginthreadex(NULL, 0, InitPlayerModelThread, (LPVOID)this, 0, NULL);
 	}
-	if (!m_InitEvents->back()->Initialize(m_device, m_hwnd, m_HID,
-		"Data/FBX/Bonfire/Bonfire.fbx", L"Data/FBX/Default/Default_1.dds",
-		XMFLOAT3(1.00f, 1.00f, 1.00f), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(5.0f, 0.0f, 0.0f), false))
-	{
-		MessageBox(m_hwnd, L"ModelManager.cpp : m_InitEvents->back()->Initialize", L"Error", MB_OK);
-		return false;
-	}*/
-	/***** 이벤트 모델 : 종료 *****/
 
 #ifdef _DEBUG
 	printf("Success >> ModelManager.cpp : Initialize()\n");
@@ -110,47 +72,40 @@ bool ModelManager::Initialize(ID3D11Device* pDevice, HWND hwnd, HID* pHID, Netwo
 
 void ModelManager::Shutdown()
 {
-	for (auto iter = m_ModelsUMap->begin(); iter != m_ModelsUMap->end(); iter++)
+	for (auto iter = m_PlayerUMap->begin(); iter != m_PlayerUMap->end(); iter++)
 	{
 		if (iter->second)
 		{
 			delete iter->second;
 		}
 	}
-	m_ModelsUMap->clear();
+	m_PlayerUMap->clear();
 
-	if (m_InitModels)
+	if (m_InitPlayerQueue)
 	{
-		while (!m_InitModels->empty())
+		while (!m_InitPlayerQueue->empty())
 		{
-			m_InitModels->front()->Shutdown();
-			delete m_InitModels->front();
-			m_InitModels->pop();
+			m_InitPlayerQueue->front()->Shutdown();
+			delete m_InitPlayerQueue->front();
+			m_InitPlayerQueue->pop();
 		}
 
-		delete m_InitModels;
-		m_InitModels = nullptr;
+		delete m_InitPlayerQueue;
+		m_InitPlayerQueue = nullptr;
 	}
 }
 
 bool ModelManager::Render(ID3D11DeviceContext* pDeviceContext, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, XMFLOAT3 cameraPosition, float deltaTime)
-{
-	for (int i = 0; i < TEST_SIZE; i++)
+{ 
+	m_testQueueMutex.lock();
+	for (auto iter = m_testVector.begin(); iter != m_testVector.end(); iter++)
 	{
-		if (!m_tests[i]->IsInitilized())
+		if ((*iter)->IsInitilized())
 		{
-			if (!m_tests[i]->GetInitStarted())
-			{
-				_beginthreadex(NULL, 0, InitModelThread, (LPVOID)this, 0, NULL);
-				m_tests[i]->SetInitStarted(true);
-			}
-		}
-		else
-		{
-			m_tests[i]->Render(pDeviceContext, viewMatrix, projectionMatrix, cameraPosition, deltaTime);
+			(*iter)->Render(pDeviceContext, viewMatrix, projectionMatrix, cameraPosition, deltaTime);
 		}
 	}
-
+	m_testQueueMutex.unlock();
 
 	// 네트워크 연결에 성공했을 때만 실행
 	if (m_NetworkEngine->GetConnectFlag())
@@ -172,14 +127,14 @@ bool ModelManager::Render(ID3D11DeviceContext* pDeviceContext, XMMATRIX viewMatr
 			int id = player.id;
 
 			// 키로 넘겨준 id에 해당되는 원소가 없고 초기화 해놓은 모델이 남아 있으면
-			if ((m_ModelsUMap->find(id) == m_ModelsUMap->end()) && !m_InitModels->empty())
+			if ((m_PlayerUMap->find(id) == m_PlayerUMap->end()) && !m_InitPlayerQueue->empty())
 			{
-				m_ModelsUMap->emplace(std::pair<int, Player*>(id, m_InitModels->front()));
-				m_InitModels->pop();
-				printf("POP >> ModelManager.cpp : m_ModelsUMap[id] = m_InitModels->front();\n");
+				m_PlayerUMap->emplace(std::pair<int, Player*>(id, m_InitPlayerQueue->front()));
+				m_InitPlayerQueue->pop();
+				printf("POP >> ModelManager.cpp : m_InitPlayerQueue->pop();\n");
 
-				m_ModelsUMap->at(id)->SetPosition(XMFLOAT3(player.position[0], player.position[1], player.position[2]));
-				m_ModelsUMap->at(id)->SetRotation(XMFLOAT3(player.rotation[0], player.rotation[1], player.rotation[2]));
+				m_PlayerUMap->at(id)->SetPosition(XMFLOAT3(player.position[0], player.position[1], player.position[2]));
+				m_PlayerUMap->at(id)->SetRotation(XMFLOAT3(player.rotation[0], player.rotation[1], player.rotation[2]));
 
 				if (!m_SetPlayerID)
 				{
@@ -213,10 +168,10 @@ bool ModelManager::Render(ID3D11DeviceContext* pDeviceContext, XMMATRIX viewMatr
 			int id = player.id;
 
 			// 키가 존재하고 활성화 상태이면
-			if ((m_ModelsUMap->find(id) != m_ModelsUMap->end()) && m_ModelsUMap->at(id)->IsActive())
+			if ((m_PlayerUMap->find(id) != m_PlayerUMap->end()) && m_PlayerUMap->at(id)->IsActive())
 			{
-				m_ModelsUMap->at(id)->SetPosition(XMFLOAT3(player.position[0], player.position[1], player.position[2]));
-				m_ModelsUMap->at(id)->SetRotation(XMFLOAT3(player.rotation[0], player.rotation[1], player.rotation[2]));
+				m_PlayerUMap->at(id)->SetPosition(XMFLOAT3(player.position[0], player.position[1], player.position[2]));
+				m_PlayerUMap->at(id)->SetRotation(XMFLOAT3(player.rotation[0], player.rotation[1], player.rotation[2]));
 			}
 
 			/***** m_RecvAPQueueMutex : 시작 *****/
@@ -227,7 +182,7 @@ bool ModelManager::Render(ID3D11DeviceContext* pDeviceContext, XMMATRIX viewMatr
 		/***** m_RecvAPQueueMutex : 종료 *****/
 
 
-		for (auto iter = m_ModelsUMap->begin(); iter != m_ModelsUMap->end(); iter++)
+		for (auto iter = m_PlayerUMap->begin(); iter != m_PlayerUMap->end(); iter++)
 		{
 			// 모델이 활성화 상태이면
 			if (iter->second->IsActive())

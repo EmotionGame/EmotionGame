@@ -78,11 +78,13 @@ private:
 
 public:
 	Model();
-	Model(const Model& other);
+	Model(const Model& rOther);
 	~Model();
 
-	bool Initialize(ID3D11Device* pDevice, HWND hwnd, HID* pHID, char* pModelFileName, WCHAR* pTextureFileName,
-		XMFLOAT3 modelcaling, XMFLOAT3 modelRotation, XMFLOAT3 modelTranslation, bool specularZero, unsigned int animStackNum);
+	bool Initialize(ID3D11Device* pDevice, HWND hwnd, HID* pHID, 
+		char* pModelFileName, WCHAR* pTextureFileName,
+		XMFLOAT3 modelcaling, XMFLOAT3 modelRotation, XMFLOAT3 modelTranslation, 
+		bool specularZero, unsigned int animStackNum);
 	void Shutdown();
 	bool Render(ID3D11DeviceContext* pDeviceContext, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, XMFLOAT3 cameraPosition, float deltaTime);
 
@@ -101,8 +103,6 @@ public:
 
 	bool IsActive();
 	bool IsInitilized();
-	void SetInitStarted(bool initStart);
-	bool GetInitStarted();
 
 private:
 	bool LoadModel(char* pFileName);
@@ -199,7 +199,4 @@ private:
 
 	std::mutex m_InitMutex;
 	bool m_Initilized = false;
-	
-	std::mutex m_InitStartMutex;
-	bool m_InitSatrt = false;
 };

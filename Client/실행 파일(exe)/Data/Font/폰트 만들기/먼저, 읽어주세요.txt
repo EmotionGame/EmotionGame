@@ -1,0 +1,63 @@
+﻿<순서대로 진행>
+bmfont64 실행
+
+<메뉴> Options->Font Settings
+0. Font : 글꼴 설정
+1. Size[px] : 글자크기 조정
+2. Match char height 체크박스 체크
+3. 나머지는 기본값
+
+폰트 선택.png를 보고 그만큼 문자를 선택해야합니당.
+
+<메뉴> Options->Export Options
+0. Equalize the cell heights 체크박스 체크
+1. width, Height : 만들어지는 텍스처 가로 세로 크기 설정
+2. Bit depth : 32에 체크!
+3. Font descrptor 는 text로 설정
+4. textures 는 dds로 설정
+5. 나머지는 기본값
+
+<메뉴> Options->Visualize로 미리 만들어질 폰트파일 텍스처를 볼수 있음
+상단에 프리뷰화면이 1/1 이 되도록해야됨 안그러면 텍스처가 여러파일로 나뉘어져서 생성됨
+
+*설정이 다끝나서 Save bitmap font as.. 로 저장
+(경로에 한글이 있으면 안되므로 바탕화면에 만드는 것을 추천)
+을 하면 변환을 해야될 .fnt파일과, .dds파일이 만들어짐
+
+*주의 : 파싱하기 전, 만들어진 .fnt을 메모장으로 열어서 상단 정보를 지워야 함.
+
+<.fnt 예시>
+info face="맑은 고딕" size=-40 bold=0 italic=0 charset="" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0
+common lineHeight=54 base=45 scaleW=256 scaleH=256 pages=1 packed=0 alphaChnl=1 redChnl=0 greenChnl=0 blueChnl=0
+page id=0 file="abc_0.dds"
+chars count=9
+char id=49   x=163   y=0     width=12    height=54    xoffset=3     yoffset=0     xadvance=22    page=0  chnl=15
+char id=50   x=85    y=0     width=19    height=54    xoffset=1     yoffset=0     xadvance=22    page=0  chnl=15
+char id=51   x=125   y=0     width=18    height=54    xoffset=2     yoffset=0     xadvance=22    page=0  chnl=15
+char id=52   x=0     y=0     width=21    height=54    xoffset=0     yoffset=0     xadvance=22    page=0  chnl=15
+char id=53   x=144   y=0     width=18    height=54    xoffset=2     yoffset=0     xadvance=22    page=0  chnl=15
+char id=54   x=105   y=0     width=19    height=54    xoffset=2     yoffset=0     xadvance=22    page=0  chnl=15
+char id=55   x=22    y=0     width=20    height=54    xoffset=1     yoffset=0     xadvance=22    page=0  chnl=15
+char id=56   x=43    y=0     width=20    height=54    xoffset=1     yoffset=0     xadvance=22    page=0  chnl=15
+char id=57   x=64    y=0     width=20    height=54    xoffset=1     yoffset=0     xadvance=22    page=0  chnl=15
+
+이렇게 나올텐데
+윗부분을 지우고
+char id=49   x=163   y=0     width=12    height=54    xoffset=3     yoffset=0     xadvance=22    page=0  chnl=15
+char id=50   x=85    y=0     width=19    height=54    xoffset=1     yoffset=0     xadvance=22    page=0  chnl=15
+char id=51   x=125   y=0     width=18    height=54    xoffset=2     yoffset=0     xadvance=22    page=0  chnl=15
+char id=52   x=0     y=0     width=21    height=54    xoffset=0     yoffset=0     xadvance=22    page=0  chnl=15
+char id=53   x=144   y=0     width=18    height=54    xoffset=2     yoffset=0     xadvance=22    page=0  chnl=15
+char id=54   x=105   y=0     width=19    height=54    xoffset=2     yoffset=0     xadvance=22    page=0  chnl=15
+char id=55   x=22    y=0     width=20    height=54    xoffset=1     yoffset=0     xadvance=22    page=0  chnl=15
+char id=56   x=43    y=0     width=20    height=54    xoffset=1     yoffset=0     xadvance=22    page=0  chnl=15
+char id=57   x=64    y=0     width=20    height=54    xoffset=1     yoffset=0     xadvance=22    page=0  chnl=15
+
+이부분만 남기고 저장해야됨니다.
+
+<그다음, FontParsing의 FontParsing에 .fnt 파일을 넣고 코드를 실행하면>
+파일명을 입력하라고 cmd창이 뜰 텐데, abc.fnt 이렇게 입력하면 abc.txt가 생성됩니다.
+
+주의 : 코드 내의 변수중 textureWidth와 textureHeight를 텍스쳐 사이즈에 맞게 설정해야합니다.
+
+이제 .txt와 .dds를 DirectX 프로젝트에 가져가서 잘 사용하면 됩니다.

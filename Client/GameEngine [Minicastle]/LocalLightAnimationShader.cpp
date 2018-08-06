@@ -5,7 +5,7 @@ LocalLightAnimationShader::LocalLightAnimationShader()
 {
 }
 
-LocalLightAnimationShader::LocalLightAnimationShader(const LocalLightAnimationShader& other)
+LocalLightAnimationShader::LocalLightAnimationShader(const LocalLightAnimationShader& rOther)
 {
 }
 
@@ -46,13 +46,13 @@ bool LocalLightAnimationShader::Render(ID3D11DeviceContext* pDeviceContext, int 
 
 bool LocalLightAnimationShader::InitializeShader(ID3D11Device* pDevice, HWND hwnd, WCHAR* pVertexShaderFileName, WCHAR* pPixelShaderFileName)
 {
-	HRESULT result;
+	HRESULT hResult;
 	ID3D10Blob* errorMessage = nullptr;
 
 	// 버텍스 쉐이더 코드를 컴파일한다.
 	ID3D10Blob* vertexShaderBuffer = nullptr;
-	result = D3DCompileFromFile(pVertexShaderFileName, NULL, NULL, "LocalLightAnimationVertexShader", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &vertexShaderBuffer, &errorMessage);
-	if (FAILED(result))
+	hResult = D3DCompileFromFile(pVertexShaderFileName, NULL, NULL, "LocalLightAnimationVertexShader", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &vertexShaderBuffer, &errorMessage);
+	if (FAILED(hResult))
 	{
 		// 셰이더 컴파일 실패시 오류메시지를 출력합니다.
 		if (errorMessage)
@@ -70,8 +70,8 @@ bool LocalLightAnimationShader::InitializeShader(ID3D11Device* pDevice, HWND hwn
 
 	// 픽셀 쉐이더 코드를 컴파일한다.
 	ID3D10Blob* pixelShaderBuffer = nullptr;
-	result = D3DCompileFromFile(pPixelShaderFileName, NULL, NULL, "LocalLightAnimationPixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &pixelShaderBuffer, &errorMessage);
-	if (FAILED(result))
+	hResult = D3DCompileFromFile(pPixelShaderFileName, NULL, NULL, "LocalLightAnimationPixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &pixelShaderBuffer, &errorMessage);
+	if (FAILED(hResult))
 	{
 		// 셰이더 컴파일 실패시 오류메시지를 출력합니다.
 		if (errorMessage)
@@ -88,16 +88,16 @@ bool LocalLightAnimationShader::InitializeShader(ID3D11Device* pDevice, HWND hwn
 	}
 
 	// 버퍼로부터 정점 셰이더를 생성한다.
-	result = pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &m_vertexShader);
-	if (FAILED(result))
+	hResult = pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &m_vertexShader);
+	if (FAILED(hResult))
 	{
 		MessageBox(m_hwnd, L"LocalLightAnimationShader.cpp : device->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &m_vertexShader);", L"Error", MB_OK);
 		return false;
 	}
 
 	// 버퍼에서 픽셀 쉐이더를 생성합니다.
-	result = pDevice->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_pixelShader);
-	if (FAILED(result))
+	hResult = pDevice->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_pixelShader);
+	if (FAILED(hResult))
 	{
 		MessageBox(m_hwnd, L"LocalLightAnimationShader.cpp : device->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_pixelShader);", L"Error", MB_OK);
 		return false;
@@ -158,8 +158,8 @@ bool LocalLightAnimationShader::InitializeShader(ID3D11Device* pDevice, HWND hwn
 	UINT numElements = sizeof(polygonLayout) / sizeof(polygonLayout[0]);
 
 	// 정점 입력 레이아웃을 만듭니다.
-	result = pDevice->CreateInputLayout(polygonLayout, numElements, vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_layout);
-	if (FAILED(result))
+	hResult = pDevice->CreateInputLayout(polygonLayout, numElements, vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_layout);
+	if (FAILED(hResult))
 	{
 		MessageBox(m_hwnd, L"LocalLightAnimationShader.cpp : device->CreateInputLayout(polygonLayout, numElements, vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_layout);", L"Error", MB_OK);
 		return false;
@@ -189,8 +189,8 @@ bool LocalLightAnimationShader::InitializeShader(ID3D11Device* pDevice, HWND hwn
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
 	// 텍스처 샘플러 상태를 만듭니다.
-	result = pDevice->CreateSamplerState(&samplerDesc, &m_sampleState);
-	if (FAILED(result))
+	hResult = pDevice->CreateSamplerState(&samplerDesc, &m_sampleState);
+	if (FAILED(hResult))
 	{
 		MessageBox(m_hwnd, L"LocalLightAnimationShader.cpp : device->CreateSamplerState(&samplerDesc, &m_sampleState);", L"Error", MB_OK);
 		return false;
@@ -206,8 +206,8 @@ bool LocalLightAnimationShader::InitializeShader(ID3D11Device* pDevice, HWND hwn
 	matrixBufferDesc.StructureByteStride = 0;
 
 	// 상수 버퍼 포인터를 만들어 이 클래스에서 정점 셰이더 상수 버퍼에 접근할 수 있게 합니다.
-	result = pDevice->CreateBuffer(&matrixBufferDesc, NULL, &m_matrixBuffer);
-	if (FAILED(result))
+	hResult = pDevice->CreateBuffer(&matrixBufferDesc, NULL, &m_matrixBuffer);
+	if (FAILED(hResult))
 	{
 		MessageBox(m_hwnd, L"LocalLightAnimationShader.cpp : device->CreateBuffer(&matrixBufferDesc, NULL, &m_matrixBuffer);", L"Error", MB_OK);
 		return false;
@@ -223,8 +223,8 @@ bool LocalLightAnimationShader::InitializeShader(ID3D11Device* pDevice, HWND hwn
 	cameraBufferDesc.StructureByteStride = 0;
 
 	// 이 클래스 내에서 정점 셰이더 상수 버퍼에 액세스 할 수 있도록 카메라 상수 버퍼 포인터를 만듭니다.
-	result = pDevice->CreateBuffer(&cameraBufferDesc, NULL, &m_cameraBuffer);
-	if (FAILED(result))
+	hResult = pDevice->CreateBuffer(&cameraBufferDesc, NULL, &m_cameraBuffer);
+	if (FAILED(hResult))
 	{
 		MessageBox(m_hwnd, L"LocalLightAnimationShader.cpp : device->CreateBuffer(&cameraBufferDesc, NULL, &m_cameraBuffer);", L"Error", MB_OK);
 		return false;
@@ -241,8 +241,8 @@ bool LocalLightAnimationShader::InitializeShader(ID3D11Device* pDevice, HWND hwn
 	skeletonBufferDesc.StructureByteStride = 0;
 
 	// 이 클래스 내에서 정점 셰이더 상수 버퍼에 액세스 할 수 있도록 카메라 상수 버퍼 포인터를 만듭니다.
-	result = pDevice->CreateBuffer(&skeletonBufferDesc, NULL, &m_skeletonBuffer);
-	if (FAILED(result))
+	hResult = pDevice->CreateBuffer(&skeletonBufferDesc, NULL, &m_skeletonBuffer);
+	if (FAILED(hResult))
 	{
 		MessageBox(m_hwnd, L"LocalLightAnimationShader.cpp : device->CreateBuffer(&skeletonBufferDesc, NULL, &m_skeletonBuffer);", L"Error", MB_OK);
 		return false;
@@ -261,8 +261,8 @@ bool LocalLightAnimationShader::InitializeShader(ID3D11Device* pDevice, HWND hwn
 	lightBufferDesc.StructureByteStride = 0;
 
 	// 이 클래스 내에서 픽셀 셰이더 상수 버퍼에 액세스 할 수 있도록 상수 버퍼 포인터를 만듭니다.
-	result = pDevice->CreateBuffer(&lightBufferDesc, NULL, &m_lightBuffer);
-	if (FAILED(result))
+	hResult = pDevice->CreateBuffer(&lightBufferDesc, NULL, &m_lightBuffer);
+	if (FAILED(hResult))
 	{
 		MessageBox(m_hwnd, L"LocalLightAnimationShader.cpp : device->CreateBuffer(&lightBufferDesc, NULL, &m_lightBuffer);", L"Error", MB_OK);
 		return false;
@@ -445,16 +445,12 @@ bool LocalLightAnimationShader::SetShaderParameters(ID3D11DeviceContext* pDevice
 
 	// 조명 변수를 상수 버퍼에 복사합니다.
 	for (int i = 0; i < MATERIAL_SIZE; i++)
+	{
 		dataPtr_ps->ambientColor[i] = ambientColor[i];
-
-	for (int i = 0; i < MATERIAL_SIZE; i++)
 		dataPtr_ps->diffuseColor[i] = diffuseColor[i];
-
-	for (int i = 0; i < MATERIAL_SIZE; i++)
 		dataPtr_ps->specularColor[i] = specularColor[i];
-
-	for (int i = 0; i < MATERIAL_SIZE; i++)
 		dataPtr_ps->specularPower[i] = specularPower[i]; // x만 사용. yzw는 패딩용...
+	}
 
 	dataPtr_ps->lightDirection = lightDirection;
 
