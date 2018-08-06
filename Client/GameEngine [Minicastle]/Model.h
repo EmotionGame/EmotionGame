@@ -1,8 +1,8 @@
 #pragma once
+#include "LocalLightShader.h"
+#include "LocalLightAnimationShader.h"
 
 class Texture;
-class LocalLightShader;
-class LocalLightAnimationShader;
 class HID;
 
 class Model : public AlignedAllocationPolicy<16>
@@ -81,7 +81,7 @@ public:
 	Model(const Model& rOther);
 	~Model();
 
-	bool Initialize(ID3D11Device* pDevice, HWND hwnd, HID* pHID, 
+	bool Initialize(ID3D11Device* pDevice, HWND hwnd,
 		char* pModelFileName, WCHAR* pTextureFileName,
 		XMFLOAT3 modelcaling, XMFLOAT3 modelRotation, XMFLOAT3 modelTranslation, 
 		bool specularZero, unsigned int animStackNum);
@@ -92,7 +92,7 @@ public:
 	void MoveObjectToLookAtUp(XMFLOAT3 value);
 	void MoveObejctToLookAtSide(XMFLOAT3 value);
 	void RotateObject(XMFLOAT3 value);
-	void PlayerControl(float frameTime);
+	void PlayerControl(HID* pHID, float frameTime);
 
 	void SetPosition(XMFLOAT3 position);
 	XMFLOAT3 GetPosition();
@@ -124,11 +124,11 @@ private:
 
 	bool m_ActiveFlag = true;
 
-	std::unordered_map<unsigned int, ID3D11Buffer*>* m_VertexBuffer = new std::unordered_map<unsigned int, ID3D11Buffer*>;
-	std::unordered_map<unsigned int, ID3D11Buffer*>* m_IndexBuffer = new std::unordered_map<unsigned int, ID3D11Buffer*>;
+	std::unordered_map<unsigned int, ID3D11Buffer*> m_VertexBufferUMap;
+	std::unordered_map<unsigned int, ID3D11Buffer*> m_IndexBufferUMap;
 
-	std::unordered_map<unsigned int, ID3D11Buffer*>* m_AnimationVertexBuffer = new std::unordered_map<unsigned int, ID3D11Buffer*>;
-	std::unordered_map<unsigned int, ID3D11Buffer*>* m_AnimationIndexBuffer = new std::unordered_map<unsigned int, ID3D11Buffer*>;
+	std::unordered_map<unsigned int, ID3D11Buffer*> m_AnimationVertexBufferUMap;
+	std::unordered_map<unsigned int, ID3D11Buffer*> m_AnimationIndexBufferUMap;
 
 	XMMATRIX m_worldMatrix = XMMatrixIdentity(); // 단위행렬로 초기화
 
@@ -150,8 +150,8 @@ private:
 	float m_limitAngle = 60.0f;
 	/***** 제어 : 종료 *****/
 
-	LocalLightShader* m_LocalLightShader = nullptr;
-	LocalLightAnimationShader* m_LocalLightAnimationShader = nullptr;
+	LocalLightShader m_LocalLightShader;
+	LocalLightAnimationShader m_LocalLightAnimationShader;
 
 	Texture* m_Texture = nullptr;
 
@@ -194,8 +194,6 @@ private:
 	XMFLOAT4 m_SpecularColor[MATERIAL_SIZE];
 	XMFLOAT3 m_LightDirection = XMFLOAT3(-1.0f, -1.0f, 1.0f);
 	/***** Material 관리 : 종료 *****/
-
-	HID* m_HID = nullptr; // 포인터를 받아와서 사용하므로 m_HID->Shutdown() 금지
 
 	std::mutex m_InitMutex;
 	bool m_Initilized = false;

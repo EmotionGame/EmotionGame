@@ -1,7 +1,5 @@
 #include "stdafx.h"
 #include "Texture.h"
-#include "LocalLightShader.h"
-#include "LocalLightAnimationShader.h"
 #include "HID.h"
 #include "Model.h"
 
@@ -862,13 +860,24 @@ Model::Model()
 
 Model::Model(const Model& rOther)
 {
+	/*m_hwnd = rOther.m_hwnd;
+	m_ActiveFlag = rOther.m_ActiveFlag;
+	m_ActiveFlag = rOther.m_ActiveFlag;
+	m_ActiveFlag = rOther.m_ActiveFlag;
+	m_ActiveFlag = rOther.m_ActiveFlag;
+	m_ActiveFlag = rOther.m_ActiveFlag;
+	m_ActiveFlag = rOther.m_ActiveFlag;
+	m_ActiveFlag = rOther.m_ActiveFlag;
+	m_ActiveFlag = rOther.m_ActiveFlag;
+	m_ActiveFlag = rOther.m_ActiveFlag;*/
+
 }
 
 Model::~Model()
 {
 }
 
-bool Model::Initialize(ID3D11Device* pDevice, HWND hwnd, HID* pHID, char* pModelFileName, WCHAR* pTextureFileName,
+bool Model::Initialize(ID3D11Device* pDevice, HWND hwnd, char* pModelFileName, WCHAR* pTextureFileName,
 	XMFLOAT3 modelcaling, XMFLOAT3 modelRotation, XMFLOAT3 modelTranslation, bool specularZero, unsigned int animStackNum)
 {
 #ifdef _DEBUG
@@ -876,19 +885,18 @@ bool Model::Initialize(ID3D11Device* pDevice, HWND hwnd, HID* pHID, char* pModel
 #endif
 
 	m_hwnd = hwnd;
-	m_HID = pHID;
 
 	// 초기 월드 매트릭스 계산용
 	m_ModelScaling = modelcaling;
 	m_ModelRotation = modelRotation;
-	m_ModelTranslation = modelTranslation;
+	//m_ModelTranslation = modelTranslation;
 
-	// 위치 확인을 위한 난수 생성
-	std::random_device rd;
-	std::uniform_real_distribution<float> xRange(0.0f, 20.0f);
-	std::uniform_real_distribution<float> zRange(-10.0f, 0.0f);
-	m_ModelTranslation.x = static_cast<float>(xRange(rd));
-	m_ModelTranslation.z = static_cast<float>(zRange(rd));
+	//// 위치 확인을 위한 난수 생성
+	//std::random_device rd;
+	//std::uniform_real_distribution<float> xRange(0.0f, 20.0f);
+	//std::uniform_real_distribution<float> zRange(-10.0f, 0.0f);
+	//m_ModelTranslation.x = static_cast<float>(xRange(rd));
+	//m_ModelTranslation.z = static_cast<float>(zRange(rd));
 	
 	// 머터리얼 값들 초기화
 	m_SpecularZero = specularZero;
@@ -945,31 +953,31 @@ bool Model::Initialize(ID3D11Device* pDevice, HWND hwnd, HID* pHID, char* pModel
 		return false;
 	}
 
-	// LocalLightShader 객체 생성
-	m_LocalLightShader = new LocalLightShader;
-	if (!m_LocalLightShader)
-	{
-		MessageBox(m_hwnd, L"Model.cpp : m_LocalLightShader = new LocalLightShader;", L"Error", MB_OK);
-		return false;
-	}
+	//// LocalLightShader 객체 생성
+	//m_LocalLightShader = new LocalLightShader;
+	//if (!m_LocalLightShader)
+	//{
+	//	MessageBox(m_hwnd, L"Model.cpp : m_LocalLightShader = new LocalLightShader;", L"Error", MB_OK);
+	//	return false;
+	//}
 
 	// LocalLightShader 객체 초기화
-	if (!m_LocalLightShader->Initialize(pDevice, hwnd))
+	if (!m_LocalLightShader.Initialize(pDevice, hwnd))
 	{
 		MessageBox(m_hwnd, L"Model.cpp : m_LocalLightShader->Initialize(device, hwnd)", L"Error", MB_OK);
 		return false;
 	}
 
-	// LocalLightAnimationShader 객체 생성
-	m_LocalLightAnimationShader = new LocalLightAnimationShader;
-	if (!m_LocalLightAnimationShader)
-	{
-		MessageBox(m_hwnd, L"Model.cpp : m_LocalLightAnimationShader = new m_LocalLightAnimationShader;", L"Error", MB_OK);
-		return false;
-	}
+	//// LocalLightAnimationShader 객체 생성
+	//m_LocalLightAnimationShader = new LocalLightAnimationShader;
+	//if (!m_LocalLightAnimationShader)
+	//{
+	//	MessageBox(m_hwnd, L"Model.cpp : m_LocalLightAnimationShader = new m_LocalLightAnimationShader;", L"Error", MB_OK);
+	//	return false;
+	//}
 
 	// LocalLightAnimationShader 객체 초기화
-	if (!m_LocalLightAnimationShader->Initialize(pDevice, hwnd))
+	if (!m_LocalLightAnimationShader.Initialize(pDevice, hwnd))
 	{
 		MessageBox(m_hwnd, L"Model.cpp : m_LocalLightAnimationShader->Initialize(device, hwnd)", L"Error", MB_OK);
 		return false;
@@ -988,21 +996,21 @@ bool Model::Initialize(ID3D11Device* pDevice, HWND hwnd, HID* pHID, char* pModel
 
 void Model::Shutdown()
 {
-	// LocalLightAnimationShader 객체 반환
-	if (m_LocalLightAnimationShader)
-	{
-		m_LocalLightAnimationShader->Shutdown();
-		delete m_LocalLightAnimationShader;
-		m_LocalLightAnimationShader = nullptr;
-	}
+	//// LocalLightAnimationShader 객체 반환
+	//if (m_LocalLightAnimationShader)
+	//{
+	//	m_LocalLightAnimationShader->Shutdown();
+	//	delete m_LocalLightAnimationShader;
+	//	m_LocalLightAnimationShader = nullptr;
+	//}
 
-	// LocalLightShader 객체 반환
-	if (m_LocalLightShader)
-	{
-		m_LocalLightShader->Shutdown();
-		delete m_LocalLightShader;
-		m_LocalLightShader = nullptr;
-	}
+	//// LocalLightShader 객체 반환
+	//if (m_LocalLightShader)
+	//{
+	//	m_LocalLightShader->Shutdown();
+	//	delete m_LocalLightShader;
+	//	m_LocalLightShader = nullptr;
+	//}
 	
 	// 모델 텍스쳐를 반환합니다.
 	ReleaseTexture();
@@ -1048,7 +1056,7 @@ bool Model::Render(ID3D11DeviceContext* pDeviceContext, XMMATRIX viewMatrix, XMM
 		if (!m_HasAnimation.at(mc)) // 애니메이션이 없으면
 		{
 			// LocalLightShader 쉐이더를 사용하여 모델을 렌더링합니다.
-			if (!m_LocalLightShader->Render(pDeviceContext, m_Vertex.at(mc).size(), worldMatrix, viewMatrix, projectionMatrix,
+			if (!m_LocalLightShader.Render(pDeviceContext, m_Vertex.at(mc).size(), worldMatrix, viewMatrix, projectionMatrix,
 				m_Texture->GetTexture(), m_LightDirection, cameraPosition, m_AmbientColor, m_DiffuseColor, m_SpecularPower, m_SpecularColor))
 			{
 				MessageBox(m_hwnd, L"Model.cpp : m_LocalLightShader->Render", L"Error", MB_OK);
@@ -1076,7 +1084,7 @@ bool Model::Render(ID3D11DeviceContext* pDeviceContext, XMMATRIX viewMatrix, XMM
 			}
 
 			// LocalLightAnimationShader 쉐이더를 사용하여 모델을 렌더링합니다.
-			if (!m_LocalLightAnimationShader->Render(pDeviceContext, m_VertexAnim.at(mc).size(), worldMatrix, viewMatrix, projectionMatrix,
+			if (!m_LocalLightAnimationShader.Render(pDeviceContext, m_VertexAnim.at(mc).size(), worldMatrix, viewMatrix, projectionMatrix,
 				m_Texture->GetTexture(), m_LightDirection, cameraPosition, m_AmbientColor, m_DiffuseColor, m_SpecularPower, m_SpecularColor,
 				m_FinalTransform, m_HasAnimation.at(mc)))
 			{
@@ -1138,29 +1146,30 @@ void Model::RotateObject(XMFLOAT3 value)
 	else if (m_limitAngle < result)
 		m_ModelRotation.x = m_limitAngle;
 }
-void Model::PlayerControl(float frameTime)
+void Model::PlayerControl(HID* pHID, float frameTime)
 {
 	int mouseX, mouseY;
-	m_HID->GetMouse_Keyboard()->GetDeltaMouse(mouseX, mouseY);
+	pHID->GetMouse_Keyboard()->GetDeltaMouse(mouseX, mouseY);
 
 	float moveSpeed = 0.05f * frameTime;
 	float rotateSpeed = 0.05f * frameTime;
 
 	RotateObject(XMFLOAT3(rotateSpeed * mouseY, rotateSpeed * mouseX, 0.0f));
 
-	if (m_HID->GetMouse_Keyboard()->IsKeyDown(DIK_W))
+	if (pHID->GetMouse_Keyboard()->IsKeyDown(DIK_W))
 		MoveObejctToLookAt(XMFLOAT3(moveSpeed, moveSpeed, moveSpeed));
-	if (m_HID->GetMouse_Keyboard()->IsKeyDown(DIK_S))
+	if (pHID->GetMouse_Keyboard()->IsKeyDown(DIK_S))
 		MoveObejctToLookAt(XMFLOAT3(-moveSpeed, -moveSpeed, -moveSpeed));
-	if (m_HID->GetMouse_Keyboard()->IsKeyDown(DIK_A))
+	if (pHID->GetMouse_Keyboard()->IsKeyDown(DIK_A))
 		MoveObejctToLookAtSide(XMFLOAT3(-moveSpeed, -moveSpeed, -moveSpeed));
-	if (m_HID->GetMouse_Keyboard()->IsKeyDown(DIK_D))
+	if (pHID->GetMouse_Keyboard()->IsKeyDown(DIK_D))
 		MoveObejctToLookAtSide(XMFLOAT3(moveSpeed, moveSpeed, moveSpeed));
-	if (m_HID->GetMouse_Keyboard()->IsKeyDown(DIK_E))
+	if (pHID->GetMouse_Keyboard()->IsKeyDown(DIK_E))
 		MoveObjectToLookAtUp(XMFLOAT3(moveSpeed, moveSpeed, moveSpeed));
-	if (m_HID->GetMouse_Keyboard()->IsKeyDown(DIK_Q))
+	if (pHID->GetMouse_Keyboard()->IsKeyDown(DIK_Q))
 		MoveObjectToLookAtUp(XMFLOAT3 (-moveSpeed, -moveSpeed, -moveSpeed));
 
+	CalculateWorldMatrix();
 	CalculateCameraPosition();
 }
 
@@ -1268,7 +1277,7 @@ bool Model::InitializeBuffers(ID3D11Device* pDevice, unsigned int meshCount)
 		MessageBox(m_hwnd, L"Model.cpp : device->CreateBuffer(&vertexBufferDesc, &vertexData, &m_vertexBuffer)", L"Error", MB_OK);
 		return false;
 	}
-	m_VertexBuffer->emplace(std::pair<unsigned int, ID3D11Buffer*>(meshCount, vertexBuffer));
+	m_VertexBufferUMap.emplace(std::pair<unsigned int, ID3D11Buffer*>(meshCount, vertexBuffer));
 
 	// 정적 인덱스 버퍼의 구조체를 설정합니다.
 	D3D11_BUFFER_DESC indexBufferDesc;
@@ -1294,7 +1303,7 @@ bool Model::InitializeBuffers(ID3D11Device* pDevice, unsigned int meshCount)
 		MessageBox(m_hwnd, L"Model.cpp : device->CreateBuffer(&indexBufferDesc, &indexData, &m_indexBuffer)", L"Error", MB_OK);
 		return false;
 	}
-	m_IndexBuffer->emplace(std::pair<unsigned int, ID3D11Buffer*>(meshCount, indexBuffer));
+	m_IndexBufferUMap.emplace(std::pair<unsigned int, ID3D11Buffer*>(meshCount, indexBuffer));
 
 	// 생성되고 값이 할당된 정점 버퍼와 인덱스 버퍼를 해제합니다.
 	delete[] m_vertices;
@@ -1367,7 +1376,7 @@ bool Model::InitializeAnimationBuffers(ID3D11Device* pDevice, unsigned int meshC
 		MessageBox(m_hwnd, L"Model.cpp : device->CreateBuffer(&vertexBufferDesc, &vertexData, &m_vertexBuffer)", L"Error", MB_OK);
 		return false;
 	}
-	m_AnimationVertexBuffer->emplace(std::pair<unsigned int, ID3D11Buffer*>(meshCount, animationVertexBuffer));
+	m_AnimationVertexBufferUMap.emplace(std::pair<unsigned int, ID3D11Buffer*>(meshCount, animationVertexBuffer));
 
 	// 정적 인덱스 버퍼의 구조체를 설정합니다.
 	D3D11_BUFFER_DESC indexBufferDesc;
@@ -1392,7 +1401,7 @@ bool Model::InitializeAnimationBuffers(ID3D11Device* pDevice, unsigned int meshC
 		MessageBox(m_hwnd, L"Model.cpp : device->CreateBuffer(&indexBufferDesc, &indexData, &m_indexBuffer)", L"Error", MB_OK);
 		return false;
 	}
-	m_AnimationIndexBuffer->emplace(std::pair<unsigned int, ID3D11Buffer*>(meshCount, animationIndexBuffer));
+	m_AnimationIndexBufferUMap.emplace(std::pair<unsigned int, ID3D11Buffer*>(meshCount, animationIndexBuffer));
 
 	// 생성되고 값이 할당된 정점 버퍼와 인덱스 버퍼를 해제합니다.
 	delete[] m_vertices;
@@ -1436,10 +1445,10 @@ void Model::RenderBuffers(ID3D11DeviceContext* pDeviceContext, unsigned int mesh
 		UINT offset = 0;
 
 		// 렌더링 할 수 있도록 입력 어셈블러에서 정점 버퍼를 활성으로 설정합니다.
-		pDeviceContext->IASetVertexBuffers(0, 1, &m_VertexBuffer->at(meshCount), &stride, &offset);
+		pDeviceContext->IASetVertexBuffers(0, 1, &m_VertexBufferUMap.at(meshCount), &stride, &offset);
 
 		// 렌더링 할 수 있도록 입력 어셈블러에서 인덱스 버퍼를 활성으로 설정합니다.
-		pDeviceContext->IASetIndexBuffer(m_IndexBuffer->at(meshCount), DXGI_FORMAT_R32_UINT, 0);
+		pDeviceContext->IASetIndexBuffer(m_IndexBufferUMap.at(meshCount), DXGI_FORMAT_R32_UINT, 0);
 
 		// 정점 버퍼로 그릴 기본형을 설정합니다. 여기서는 삼각형으로 설정합니다.
 		pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -1451,10 +1460,10 @@ void Model::RenderBuffers(ID3D11DeviceContext* pDeviceContext, unsigned int mesh
 		UINT offset = 0;
 
 		// 렌더링 할 수 있도록 입력 어셈블러에서 정점 버퍼를 활성으로 설정합니다.
-		pDeviceContext->IASetVertexBuffers(0, 1, &m_AnimationVertexBuffer->at(meshCount), &stride, &offset);
+		pDeviceContext->IASetVertexBuffers(0, 1, &m_AnimationVertexBufferUMap.at(meshCount), &stride, &offset);
 
 		// 렌더링 할 수 있도록 입력 어셈블러에서 인덱스 버퍼를 활성으로 설정합니다.
-		pDeviceContext->IASetIndexBuffer(m_AnimationIndexBuffer->at(meshCount), DXGI_FORMAT_R32_UINT, 0);
+		pDeviceContext->IASetIndexBuffer(m_AnimationIndexBufferUMap.at(meshCount), DXGI_FORMAT_R32_UINT, 0);
 
 		// 정점 버퍼로 그릴 기본형을 설정합니다. 여기서는 삼각형으로 설정합니다.
 		pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -1474,41 +1483,33 @@ void Model::ReleaseTexture()
 
 void Model::ShutdownBuffers()
 {
-	for (auto iter = m_AnimationIndexBuffer->begin(); iter != m_AnimationIndexBuffer->end(); iter++)
+	for (auto iter = m_AnimationIndexBufferUMap.begin(); iter != m_AnimationIndexBufferUMap.end(); iter++)
 	{
 		iter->second->Release();
 		iter->second = nullptr;
 	}
-	m_AnimationIndexBuffer->clear();
-	delete m_AnimationIndexBuffer;
-	m_AnimationIndexBuffer = nullptr;
+	m_AnimationIndexBufferUMap.clear();
 
-	for (auto iter = m_AnimationVertexBuffer->begin(); iter != m_AnimationVertexBuffer->end(); iter++)
+	for (auto iter = m_AnimationVertexBufferUMap.begin(); iter != m_AnimationVertexBufferUMap.end(); iter++)
 	{
 		iter->second->Release();
 		iter->second = nullptr;
 	}
-	m_AnimationVertexBuffer->clear();
-	delete m_AnimationVertexBuffer;
-	m_AnimationVertexBuffer = nullptr;
+	m_AnimationVertexBufferUMap.clear();
 
-	for (auto iter = m_IndexBuffer->begin(); iter != m_IndexBuffer->end(); iter++)
+	for (auto iter = m_IndexBufferUMap.begin(); iter != m_IndexBufferUMap.end(); iter++)
 	{
 		iter->second->Release();
 		iter->second = nullptr;
 	}
-	m_IndexBuffer->clear();
-	delete m_IndexBuffer;
-	m_IndexBuffer = nullptr;
+	m_IndexBufferUMap.clear();
 
-	for (auto iter = m_VertexBuffer->begin(); iter != m_VertexBuffer->end(); iter++)
+	for (auto iter = m_VertexBufferUMap.begin(); iter != m_VertexBufferUMap.end(); iter++)
 	{
 		iter->second->Release();
 		iter->second = nullptr;
 	}
-	m_VertexBuffer->clear();
-	delete m_VertexBuffer;
-	m_VertexBuffer = nullptr;
+	m_VertexBufferUMap.clear();
 }
 
 bool Model::CheckFormat(char* pFileName) {

@@ -117,14 +117,14 @@ bool GameEngine::Initialize()
 	}
 
 	// RenderingEngine °´Ã¼ ÃÊ±âÈ­.
-	if (!m_RenderingEngine->Initialize(m_hwnd, m_HID, m_NetworkEngine, screenWidth, screenHeight))
+	if (!m_RenderingEngine->Initialize(m_hwnd, screenWidth, screenHeight))
 	{
 		MessageBox(m_hwnd, L"GameEngine.cpp : m_RenderingEngine->Initialize(m_hwnd, screenWidth, screenHeight)", L"Error", MB_OK);
 		return false;
 	}
 
 	// PhysicsEngine °´Ã¼ ÃÊ±âÈ­.
-	if (!m_PhysicsEngine->Initialize(m_hwnd, m_HID))
+	if (!m_PhysicsEngine->Initialize(m_hwnd))
 	{
 		MessageBox(m_hwnd, L"GameEngine.cpp : m_PhysicsEngine->Initialize(m_hwnd, m_HID)", L"Error", MB_OK);
 		return false;
@@ -250,7 +250,7 @@ bool GameEngine::Frame()
 	// RenderingEngine
 	if (m_FrameTimeSum[1] > m_FrameTimeLimit[1])
 	{
-		if (!m_RenderingEngine->Frame(m_CpuPercentage, m_FrameTimeSum[1]))
+		if (!m_RenderingEngine->Frame(m_HID, m_CpuPercentage, m_FrameTimeSum[1]))
 		{
 			MessageBox(m_hwnd, L"GameEngine.cpp : m_RenderingEngine->Frame(m_CpuPercentage, m_FrameTimeSum[1])", L"Error", MB_OK);
 			return false;
@@ -261,7 +261,7 @@ bool GameEngine::Frame()
 	// PhysicsEngine
 	if (m_FrameTimeSum[2] > m_FrameTimeLimit[2])
 	{
-		if (!m_PhysicsEngine->Frame(m_FrameTimeSum[2]))
+		if (!m_PhysicsEngine->Frame(m_RenderingEngine, m_HID, m_NetworkEngine, m_FrameTimeSum[2]))
 		{
 			MessageBox(m_hwnd, L"GameEngine.cpp : m_PhysicsEngine->Frame(m_FrameTimeSum[2])", L"Error", MB_OK);
 			return false;

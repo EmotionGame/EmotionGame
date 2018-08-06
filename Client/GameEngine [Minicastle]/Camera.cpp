@@ -14,9 +14,8 @@ Camera::~Camera()
 {
 }
 
-bool Camera::Initialize(HID* pHID)
+bool Camera::Initialize()
 {
-	m_HID = pHID;
 
 	return true;
 }
@@ -26,9 +25,9 @@ void Camera::Shutdown()
 	// 포인터를 받아와서 사용하므로 m_HID->Shutdown() 금지
 }
 
-bool Camera::Frame(float frameTime)
+bool Camera::Frame(HID* pHID, float frameTime)
 {
-	Navigation(frameTime);
+	Navigation(pHID, frameTime);
 
 	return true;
 }
@@ -168,8 +167,8 @@ void Camera::MoveCameraPositionToLookAtSide(float x, float y, float z)
 	m_position.z += z * m_side.z;
 }
 
-void Camera::Navigation(float deltaTime) {
-	if (m_HID->GetMouse_Keyboard()->IsKeyRelease(DIK_F1))
+void Camera::Navigation(HID* pHID, float deltaTime) {
+	if (pHID->GetMouse_Keyboard()->IsKeyRelease(DIK_F1))
 	{
 		if (m_Navigation)
 			m_Navigation = false;
@@ -180,23 +179,23 @@ void Camera::Navigation(float deltaTime) {
 	if (m_Navigation)
 	{
 		int mouseX, mouseY;
-		m_HID->GetMouse_Keyboard()->GetDeltaMouse(mouseX, mouseY);
+		pHID->GetMouse_Keyboard()->GetDeltaMouse(mouseX, mouseY);
 		float moveSpeed = 0.05f * deltaTime;
 		float rotateSpeed = 0.05f * deltaTime;
 
 		RotateCamera(rotateSpeed * mouseY, rotateSpeed * mouseX, 0.0f);
 
-		if (m_HID->GetMouse_Keyboard()->IsKeyDown(DIK_W))
+		if (pHID->GetMouse_Keyboard()->IsKeyDown(DIK_W))
 			MoveCameraPositionToLookAt(moveSpeed, moveSpeed, moveSpeed);
-		if (m_HID->GetMouse_Keyboard()->IsKeyDown(DIK_S))
+		if (pHID->GetMouse_Keyboard()->IsKeyDown(DIK_S))
 			MoveCameraPositionToLookAt(-moveSpeed, -moveSpeed, -moveSpeed);
-		if (m_HID->GetMouse_Keyboard()->IsKeyDown(DIK_E))
+		if (pHID->GetMouse_Keyboard()->IsKeyDown(DIK_E))
 			MoveCameraPositionToLookAtUp(moveSpeed, moveSpeed, moveSpeed);
-		if (m_HID->GetMouse_Keyboard()->IsKeyDown(DIK_Q))
+		if (pHID->GetMouse_Keyboard()->IsKeyDown(DIK_Q))
 			MoveCameraPositionToLookAtUp(-moveSpeed, -moveSpeed, -moveSpeed);
-		if (m_HID->GetMouse_Keyboard()->IsKeyDown(DIK_A))
+		if (pHID->GetMouse_Keyboard()->IsKeyDown(DIK_A))
 			MoveCameraPositionToLookAtSide(moveSpeed, moveSpeed, moveSpeed);
-		if (m_HID->GetMouse_Keyboard()->IsKeyDown(DIK_D))
+		if (pHID->GetMouse_Keyboard()->IsKeyDown(DIK_D))
 			MoveCameraPositionToLookAtSide(-moveSpeed, -moveSpeed, -moveSpeed);
 	}
 }

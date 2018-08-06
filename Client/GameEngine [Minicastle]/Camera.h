@@ -9,9 +9,9 @@ public:
 	Camera(const Camera& other);
 	~Camera();
 
-	bool Initialize(HID* pHID);
+	bool Initialize();
 	void Shutdown();
-	bool Frame(float frameTime);
+	bool Frame(HID* pHID, float frameTime);
 
 	void SetPosition(float x, float y, float z);
 	void SetPosition(XMFLOAT3 xyz);
@@ -29,10 +29,9 @@ public:
 	void MoveCameraPositionToLookAtUp(float x, float y, float z);
 	void MoveCameraPositionToLookAtSide(float x, float y, float z);
 
-	void Navigation(float deltaTime);
+	void Navigation(HID* pHID, float deltaTime);
 
 private:
-	HID* m_HID = nullptr; // 포인터를 받아와서 사용하므로 m_HID->Shutdown() 금지
 	bool m_Navigation = false;
 
 	XMFLOAT3 m_position = XMFLOAT3(0.0f, 0.0f, 0.0f);

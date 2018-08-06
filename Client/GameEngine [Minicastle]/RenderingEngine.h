@@ -29,9 +29,10 @@ public:
 	RenderingEngine(const RenderingEngine& other);
 	~RenderingEngine();
 
-	bool Initialize(HWND hwnd, HID* pHID, NetworkEngine* pNetworkEngine, int screenWidth, int screenHeight);
+	bool Initialize(HWND hwnd, int screenWidth, int screenHeight);
 	void Shutdown();
-	bool Frame(int cputPercentage, float deltaTime);
+	bool Frame(HID* pHID, int cputPercentage, float deltaTime);
+	bool Physics(HID* pHID, NetworkEngine* pNetworkEngine, float deltaTime);
 
 private:
 	bool Render(float deltaTime);
@@ -41,13 +42,11 @@ private:
 	HWND m_hwnd;
 
 	Direct3D* m_Direct3D = nullptr;
-	HID* m_HID = nullptr; // 포인터를 받아와서 사용하므로 m_HID->Shutdown() 금지
 	FPS* m_FPS = nullptr;
 	Camera* m_Camera = nullptr;
 	XMMATRIX m_baseViewMatrix = XMMatrixIdentity();
 	ModelManager* m_ModelManager = nullptr;
 	TextManager* m_TextManager = nullptr;
-	NetworkEngine* m_NetworkEngine = nullptr; // 포인터를 받아와서 사용하므로 m_NetworkEngine->Shutdown() 금지
 
 	SkyDome* m_SkyDome = nullptr;
 	SkyDomeShader* m_SkyDomeShader = nullptr;

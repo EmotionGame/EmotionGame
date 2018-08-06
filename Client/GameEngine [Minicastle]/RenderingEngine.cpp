@@ -26,15 +26,13 @@ RenderingEngine::~RenderingEngine()
 {
 }
 
-bool RenderingEngine::Initialize(HWND hwnd, HID* pHID, NetworkEngine* pNetworkEngine, int screenWidth, int screenHeight)
+bool RenderingEngine::Initialize(HWND hwnd, int screenWidth, int screenHeight)
 {
 #ifdef _DEBUG
 	printf("Start >> RenderingEngine.cpp : Initialize()\n");
 #endif
 
 	m_hwnd = hwnd;
-	m_HID = pHID;
-	m_NetworkEngine = pNetworkEngine;
 
 	// Direct3D °´Ã¼ »ý¼º
 	m_Direct3D = new Direct3D;
@@ -130,7 +128,7 @@ bool RenderingEngine::Initialize(HWND hwnd, HID* pHID, NetworkEngine* pNetworkEn
 	}
 
 	// Camera °´Ã¼ ÃÊ±âÈ­
-	if (!m_Camera->Initialize(m_HID))
+	if (!m_Camera->Initialize())
 	{
 		MessageBox(m_hwnd, L"RenderingEngine.cpp : m_Camera->Initialize(m_HID)", L"Error", MB_OK);
 		return false;
@@ -146,7 +144,7 @@ bool RenderingEngine::Initialize(HWND hwnd, HID* pHID, NetworkEngine* pNetworkEn
 	m_Camera->GetViewMatrix(m_baseViewMatrix);
 
 	// ModelManager °´Ã¼ ÃÊ±âÈ­
-	if (!m_ModelManager->Initialize(m_Direct3D->GetDevice(), m_hwnd, m_HID, pNetworkEngine, m_Camera, m_QuadTree))
+	if (!m_ModelManager->Initialize(m_Direct3D->GetDevice(), m_hwnd))
 	{
 		MessageBox(m_hwnd, L"RenderingEngine.cpp : m_ModelManager->Initialize(m_Direct3D->GetDevice(), m_hwnd)", L"Error", MB_OK);
 		return false;
@@ -290,7 +288,7 @@ void RenderingEngine::Shutdown()
 	}
 }
 
-bool RenderingEngine::Frame(int cputPercentage, float deltaTime)
+bool RenderingEngine::Frame(HID* pHID, int cputPercentage, float deltaTime)
 {
 	// Æò±Õ µ¨Å¸ Å¸ÀÓ ±¸ÇÏ´Â ÇÔ¼ö
 	CaluateAverageDeltaTime(deltaTime);
@@ -307,7 +305,7 @@ bool RenderingEngine::Frame(int cputPercentage, float deltaTime)
 		return false;
 	}
 
-	if (!m_Camera->Frame(deltaTime))
+	if (!m_Camera->Frame(pHID, deltaTime))
 	{
 		MessageBox(m_hwnd, L"RenderingEngine.cpp : m_Camera->Frame()", L"Error", MB_OK);
 		return false;
@@ -319,6 +317,13 @@ bool RenderingEngine::Frame(int cputPercentage, float deltaTime)
 		MessageBox(m_hwnd, L"RenderingEngine.cpp : Render(deltaTime)", L"Error", MB_OK);
 		return false;
 	}
+
+	return true;
+}
+
+bool RenderingEngine::Physics(HID* pHID, NetworkEngine* pNetworkEngine, float deltaTime)
+{
+	m_ModelManager->Physics(pHID, pNetworkEngine, m_Camera, m_QuadTree, deltaTime);
 
 	return true;
 }

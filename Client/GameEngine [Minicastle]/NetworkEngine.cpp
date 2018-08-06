@@ -57,11 +57,20 @@ bool NetworkEngine::Initialize(HWND hwnd, char* pIP, char* pPort)
 		return false;
 	}
 
-	//// 서버와 연결하지 않았을 때 테스트용
+	///**** 서버와 연결하지 않았을 때 테스트용 : 시작 *****/
 	//UserPacket test;
-	//test.id = 10;
-	//m_RecvUserPacketQueue->push(test);
+	//for (int i = 0; i < 1000; i++)
+	//{
+	//	test.id = i;
+	//	int x = i % 100;
+	//	int z = i / 100;
+	//	test.position[0] = 1.0f * x;
+	//	test.position[2] = -1.0f * z;
+	//	m_RecvUserPacketQueue->push(test);
+
+	//}
 	//m_ConnectFlag = true;
+	///**** 서버와 연결하지 않았을 때 테스트용 : 종료 *****/
 
 	/***** Winsock 초기화 *****/
 	if (WSAStartup(MAKEWORD(2, 2), &m_wsaData) != 0)
@@ -143,27 +152,32 @@ bool NetworkEngine::Frame()
 
 bool NetworkEngine::Connect()
 {
-	//printf("Start >> NetworkEngine.cpp : Connect()\n");
+#ifdef _DEBUG
+	printf("Start >> NetworkEngine.cpp : Connect()\n");
+#endif
 
-	//if (WSAConnect(m_hSocket, (SOCKADDR*)&m_ServerAddr, sizeof(m_ServerAddr), &m_ConnectBuff, NULL, NULL, NULL) == SOCKET_ERROR)
-	//{
-	//	printf("Fail >> NetworkEngine.cpp : Connect()\n");
-	//}
-	//else
-	//{
-	//	printf("Success >> NetworkEngine.cpp : Connect()\n");
+	if (WSAConnect(m_hSocket, (SOCKADDR*)&m_ServerAddr, sizeof(m_ServerAddr), &m_ConnectBuff, NULL, NULL, NULL) == SOCKET_ERROR)
+	{
+#ifdef _DEBUG
+		printf("Fail >> NetworkEngine.cpp : Connect()\n");
+#endif
+	}
+	else
+	{
+#ifdef _DEBUG
+		printf("Success >> NetworkEngine.cpp : Connect()\n");
+#endif
+		m_ConnectFlag = true;
 
-	//	m_ConnectFlag = true;
+		// 구조체에 이벤트 핸들을 삽입해서 전달
+		m_Event = WSACreateEvent();
+		memset(&m_Overlapped, 0, sizeof(m_Overlapped));
+		m_Overlapped.hEvent = m_Event;
 
-	//	// 구조체에 이벤트 핸들을 삽입해서 전달
-	//	m_Event = WSACreateEvent();
-	//	memset(&m_Overlapped, 0, sizeof(m_Overlapped));
-	//	m_Overlapped.hEvent = m_Event;
-
-	//	// Thread 구동
-	//	m_hSendThread = (HANDLE)_beginthreadex(NULL, 0, SendThread, (LPVOID)this, 0, NULL);
-	//	m_hRecvThread = (HANDLE)_beginthreadex(NULL, 0, RecvThread, (LPVOID)this, 0, NULL);
-	//}
+		// Thread 구동
+		m_hSendThread = (HANDLE)_beginthreadex(NULL, 0, SendThread, (LPVOID)this, 0, NULL);
+		m_hRecvThread = (HANDLE)_beginthreadex(NULL, 0, RecvThread, (LPVOID)this, 0, NULL);
+	}
 
 	return true;
 }
@@ -193,7 +207,7 @@ UINT WINAPI NetworkEngine::_SendThread()
 
 			m_SendAPQueueMutex.unlock();
 			/***** m_SendAPQueueMutex : 종료 *****/
-
+#ifdef _DEBUG
 			printf("Pop >> NetworkEngine.cpp : ActionPacket -> type = %d, id = %d, position = {%f %f %f}, rotation = {%f %f %f}\n",
 				tempAP.type,
 				tempAP.id,
@@ -204,16 +218,20 @@ UINT WINAPI NetworkEngine::_SendThread()
 				tempAP.rotation[1],
 				tempAP.rotation[2]
 			);
-
+#endif
 			m_SendBuff.len = sizeof(ActionPacket);
 			m_SendBuff.buf = (char*)&tempAP;
 
 			if (WSASend(m_hSocket, &m_SendBuff, 1, (LPDWORD)&m_SendBytes, 0, &m_Overlapped, NULL) == SOCKET_ERROR)
 			{
+#ifdef _DEBUG
 				printf("Fail >> NetworkEngine.cpp : ActionPacket -> WSASend\n");
+#endif
 				continue;
 			}
+#ifdef _DEBUG
 			printf("Success >> NetworkEngine.cpp : ActionPacket -> WSASend\n");
+#endif
 
 			/***** m_SendAPQueueMutex : 시작 *****/
 			m_SendAPQueueMutex.lock();
@@ -234,7 +252,7 @@ UINT WINAPI NetworkEngine::_SendThread()
 
 			m_SendEPQueueMutex.unlock();
 			/***** m_SendEPQueueMutex : 종료 *****/
-
+#ifdef _DEBUG
 			printf("Pop >> NetworkEngine.cpp : EventPacket -> type = %d, id = %d, position = {%f %f %f}, state = %s\n",
 				tempEP.type,
 				tempEP.id,
@@ -243,17 +261,20 @@ UINT WINAPI NetworkEngine::_SendThread()
 				tempEP.position[2],
 				tempEP.state ? "true" : "false"
 			);
-
+#endif
 			m_SendBuff.len = sizeof(EventPacket);
 			m_SendBuff.buf = (char*)&tempEP;
 
 			if (WSASend(m_hSocket, &m_SendBuff, 1, (LPDWORD)&m_SendBytes, 0, &m_Overlapped, NULL) == SOCKET_ERROR)
 			{
+#ifdef _DEBUG
 				printf("Fail >> NetworkEngine.cpp : EventPacket -> WSASend\n");
+#endif
 				continue;
 			}
+#ifdef _DEBUG
 			printf("Success >> NetworkEngine.cpp : EventPacket -> WSASend\n");
-
+#endif
 			/***** m_SendEPQueueMutex : 시작 *****/
 			m_SendEPQueueMutex.lock();
 		}
@@ -289,11 +310,14 @@ UINT WINAPI NetworkEngine::_RecvThread()
 
 		if (recv(m_hSocket, buffer, 256, 0) == SOCKET_ERROR)
 		{
+#ifdef _DEBUG
 			printf("Fail >> NetworkEngine.cpp : recv\n");
+#endif
 			continue;
 		}
+#ifdef _DEBUG
 		printf("Success >> NetworkEngine.cpp : recv\n");
-
+#endif
 		int* type = reinterpret_cast<int*>(buffer);
 
 
