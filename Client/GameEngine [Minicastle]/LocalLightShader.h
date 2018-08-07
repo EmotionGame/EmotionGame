@@ -4,7 +4,8 @@ class LocalLightShader
 {
 public:
 	LocalLightShader();
-	LocalLightShader(const LocalLightShader& other);
+	LocalLightShader(const LocalLightShader& rOther);
+	LocalLightShader& operator=(const LocalLightShader& rOther);
 	~LocalLightShader();
 
 	bool Initialize(ID3D11Device* pDevice, HWND hwnd);

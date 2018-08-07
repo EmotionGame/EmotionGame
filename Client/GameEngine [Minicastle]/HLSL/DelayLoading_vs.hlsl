@@ -1,18 +1,12 @@
-////////////////////////////////////////////////////////////////////////////////
-// Filename: skydome_vs.hlsl
-////////////////////////////////////////////////////////////////////////////////
-
-
 /////////////
 // GLOBALS //
 /////////////
-cbuffer MatrixBuffer
+cbuffer MatrixBuffer : register(b0)
 {
 	matrix worldMatrix;
 	matrix viewMatrix;
 	matrix projectionMatrix;
 };
-
 
 //////////////
 // TYPEDEFS //
@@ -20,23 +14,22 @@ cbuffer MatrixBuffer
 struct VertexInputType
 {
     float4 position : POSITION;
-	float2 tex : TEXCOORD0;
+    float2 tex : TEXCOORD0;
 };
 
 struct PixelInputType
 {
     float4 position : SV_POSITION;
-	float2 tex : TEXCOORD0;
+    float2 tex : TEXCOORD0;
 };
 
 
 ////////////////////////////////////////////////////////////////////////////////
 // Vertex Shader
 ////////////////////////////////////////////////////////////////////////////////
-PixelInputType SkyDomeVertexShader(VertexInputType input)
+PixelInputType DelayLoadingVertexShader(VertexInputType input)
 {
     PixelInputType output;
-    
 
 	// 적절한 행렬 계산을 위해 위치 벡터를 4 단위로 변경합니다.
     input.position.w = 1.0f;

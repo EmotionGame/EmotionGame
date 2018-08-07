@@ -9,6 +9,24 @@ LocalLightAnimationShader::LocalLightAnimationShader(const LocalLightAnimationSh
 {
 }
 
+LocalLightAnimationShader& LocalLightAnimationShader::operator=(const LocalLightAnimationShader& rOther)
+{
+	m_hwnd = rOther.m_hwnd;
+
+	m_vertexShader = rOther.m_vertexShader;
+	m_pixelShader = rOther.m_pixelShader;
+	m_layout = rOther.m_layout;
+	m_sampleState = rOther.m_sampleState;
+
+	m_matrixBuffer = rOther.m_matrixBuffer;
+	m_cameraBuffer = rOther.m_cameraBuffer;
+	m_lightBuffer = rOther.m_lightBuffer;
+
+	m_skeletonBuffer = rOther.m_skeletonBuffer;
+
+	return *this;
+}
+
 LocalLightAnimationShader::~LocalLightAnimationShader()
 {
 }

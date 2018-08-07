@@ -20,14 +20,26 @@ bool NetworkEngine::Initialize(HWND hwnd, char* pIP, char* pPort)
 	m_IP = pIP;
 	m_Port = pPort;
 
-	m_SendUserPacketQueue = new std::queue<UserPacket>;
-	if (!m_SendUserPacketQueue)
+	m_SendUserPacket30Queue = new std::queue<UserPacket>;
+	if (!m_SendUserPacket30Queue)
 	{
 		MessageBox(m_hwnd, L"NetworkEngine.cpp : m_SendUserPacketQueue", L"Error", MB_OK);
 		return false;
 	}
-	m_RecvUserPacketQueue = new std::queue<UserPacket>;
-	if (!m_RecvUserPacketQueue)
+	m_RecvUserPacket30Queue = new std::queue<UserPacket>;
+	if (!m_RecvUserPacket30Queue)
+	{
+		MessageBox(m_hwnd, L"NetworkEngine.cpp : m_RecvActionPacketQueue", L"Error", MB_OK);
+		return false;
+	}
+	m_SendUserPacket31Queue = new std::queue<UserPacket>;
+	if (!m_SendUserPacket31Queue)
+	{
+		MessageBox(m_hwnd, L"NetworkEngine.cpp : m_SendUserPacketQueue", L"Error", MB_OK);
+		return false;
+	}
+	m_RecvUserPacket31Queue = new std::queue<UserPacket>;
+	if (!m_RecvUserPacket31Queue)
 	{
 		MessageBox(m_hwnd, L"NetworkEngine.cpp : m_RecvActionPacketQueue", L"Error", MB_OK);
 		return false;
@@ -57,20 +69,20 @@ bool NetworkEngine::Initialize(HWND hwnd, char* pIP, char* pPort)
 		return false;
 	}
 
-	///**** 서버와 연결하지 않았을 때 테스트용 : 시작 *****/
-	//UserPacket test;
-	//for (int i = 0; i < 1000; i++)
-	//{
-	//	test.id = i;
-	//	int x = i % 100;
-	//	int z = i / 100;
-	//	test.position[0] = 1.0f * x;
-	//	test.position[2] = -1.0f * z;
-	//	m_RecvUserPacketQueue->push(test);
+	/**** 서버와 연결하지 않았을 때 테스트용 : 시작 *****/
+	UserPacket test;
+	for (int i = 0; i < 8; i++)
+	{
+		test.id = i;
+		int x = i % 100;
+		int z = i / 100;
+		test.position[0] = 1.0f * x;
+		test.position[2] = -1.0f * z;
+		m_RecvUserPacket30Queue->push(test);
 
-	//}
-	//m_ConnectFlag = true;
-	///**** 서버와 연결하지 않았을 때 테스트용 : 종료 *****/
+	}
+	m_ConnectFlag = true;
+	/**** 서버와 연결하지 않았을 때 테스트용 : 종료 *****/
 
 	/***** Winsock 초기화 *****/
 	if (WSAStartup(MAKEWORD(2, 2), &m_wsaData) != 0)
@@ -152,32 +164,32 @@ bool NetworkEngine::Frame()
 
 bool NetworkEngine::Connect()
 {
-#ifdef _DEBUG
-	printf("Start >> NetworkEngine.cpp : Connect()\n");
-#endif
-
-	if (WSAConnect(m_hSocket, (SOCKADDR*)&m_ServerAddr, sizeof(m_ServerAddr), &m_ConnectBuff, NULL, NULL, NULL) == SOCKET_ERROR)
-	{
-#ifdef _DEBUG
-		printf("Fail >> NetworkEngine.cpp : Connect()\n");
-#endif
-	}
-	else
-	{
-#ifdef _DEBUG
-		printf("Success >> NetworkEngine.cpp : Connect()\n");
-#endif
-		m_ConnectFlag = true;
-
-		// 구조체에 이벤트 핸들을 삽입해서 전달
-		m_Event = WSACreateEvent();
-		memset(&m_Overlapped, 0, sizeof(m_Overlapped));
-		m_Overlapped.hEvent = m_Event;
-
-		// Thread 구동
-		m_hSendThread = (HANDLE)_beginthreadex(NULL, 0, SendThread, (LPVOID)this, 0, NULL);
-		m_hRecvThread = (HANDLE)_beginthreadex(NULL, 0, RecvThread, (LPVOID)this, 0, NULL);
-	}
+//#ifdef _DEBUG
+//	printf("Start >> NetworkEngine.cpp : Connect()\n");
+//#endif
+//
+//	if (WSAConnect(m_hSocket, (SOCKADDR*)&m_ServerAddr, sizeof(m_ServerAddr), &m_ConnectBuff, NULL, NULL, NULL) == SOCKET_ERROR)
+//	{
+//#ifdef _DEBUG
+//		printf("Fail >> NetworkEngine.cpp : Connect()\n");
+//#endif
+//	}
+//	else
+//	{
+//#ifdef _DEBUG
+//		printf("Success >> NetworkEngine.cpp : Connect()\n");
+//#endif
+//		m_ConnectFlag = true;
+//
+//		// 구조체에 이벤트 핸들을 삽입해서 전달
+//		m_Event = WSACreateEvent();
+//		memset(&m_Overlapped, 0, sizeof(m_Overlapped));
+//		m_Overlapped.hEvent = m_Event;
+//
+//		// Thread 구동
+//		m_hSendThread = (HANDLE)_beginthreadex(NULL, 0, SendThread, (LPVOID)this, 0, NULL);
+//		m_hRecvThread = (HANDLE)_beginthreadex(NULL, 0, RecvThread, (LPVOID)this, 0, NULL);
+//	}
 
 	return true;
 }
@@ -193,18 +205,61 @@ UINT WINAPI NetworkEngine::_SendThread()
 {
 	while (1)
 	{
+		UserPacket tempUP;
 		ActionPacket tempAP;
 		EventPacket tempEP;
+
+
+		/***** UserPacket : 시작 *****/
+		/***** m_SendUP31QueueMutex : 시작 *****/
+		m_SendUP31QueueMutex.lock();
+		if (!m_SendUserPacket31Queue->empty())
+		{
+			tempUP = m_SendUserPacket31Queue->front();
+			m_SendUserPacket31Queue->pop();
+			m_SendUP31QueueMutex.unlock();
+			/***** m_SendUP31QueueMutex : 종료 *****/
+#ifdef _DEBUG
+			printf("Pop >> NetworkEngine.cpp : UserPacket31 -> type = %d, id = %d, position = {%f %f %f}, rotation = {%f %f %f}\n",
+				tempUP.type,
+				tempUP.id,
+				tempUP.position[0],
+				tempUP.position[1],
+				tempUP.position[2],
+				tempUP.rotation[0],
+				tempUP.rotation[1],
+				tempUP.rotation[2]
+			);
+#endif
+			m_SendBuff.len = sizeof(UserPacket);
+			m_SendBuff.buf = (char*)&tempUP;
+
+			if (WSASend(m_hSocket, &m_SendBuff, 1, (LPDWORD)&m_SendBytes, 0, &m_Overlapped, NULL) == SOCKET_ERROR)
+			{
+#ifdef _DEBUG
+				printf("Fail >> NetworkEngine.cpp : UserPacket31 -> WSASend\n");
+#endif
+				continue;
+			}
+#ifdef _DEBUG
+			printf("Success >> NetworkEngine.cpp : UserPacket31 -> WSASend\n");
+#endif
+
+			/***** m_SendUP31QueueMutex : 시작 *****/
+			m_SendUP31QueueMutex.lock();
+		}
+		m_SendUP31QueueMutex.unlock();
+		/***** m_SendUP31QueueMutex : 종료 *****/
+		/***** UserPacket : 종료 *****/
+
 
 		/***** ActionPacket : 시작 *****/
 		/***** m_SendAPQueueMutex : 시작 *****/
 		m_SendAPQueueMutex.lock();
-
 		if (!m_SendActionPacketQueue->empty())
 		{
 			tempAP = m_SendActionPacketQueue->front();
 			m_SendActionPacketQueue->pop();
-
 			m_SendAPQueueMutex.unlock();
 			/***** m_SendAPQueueMutex : 종료 *****/
 #ifdef _DEBUG
@@ -236,20 +291,18 @@ UINT WINAPI NetworkEngine::_SendThread()
 			/***** m_SendAPQueueMutex : 시작 *****/
 			m_SendAPQueueMutex.lock();
 		}
-
 		m_SendAPQueueMutex.unlock();
 		/***** m_SendAPQueueMutex : 종료 *****/
 		/***** ActionPacket : 종료 *****/
 
+
 		/***** EventPacket : 시작 *****/
 		/***** m_SendEPQueueMutex : 시작 *****/
 		m_SendEPQueueMutex.lock();
-
 		if (!m_SendEventPacketQueue->empty())
 		{
 			tempEP = m_SendEventPacketQueue->front();
 			m_SendEventPacketQueue->pop();
-
 			m_SendEPQueueMutex.unlock();
 			/***** m_SendEPQueueMutex : 종료 *****/
 #ifdef _DEBUG
@@ -278,11 +331,9 @@ UINT WINAPI NetworkEngine::_SendThread()
 			/***** m_SendEPQueueMutex : 시작 *****/
 			m_SendEPQueueMutex.lock();
 		}
-
 		m_SendEPQueueMutex.unlock();
 		/***** m_SendEPQueueMutex : 종료 *****/
-		/***** EventPacket : 시작 *****/
-
+		/***** EventPacket : 종료 *****/
 	}
 
 	_endthreadex(0);
@@ -308,7 +359,10 @@ UINT WINAPI NetworkEngine::_RecvThread()
 		tempAP = nullptr;
 		tempEP = nullptr;
 
-		if (recv(m_hSocket, buffer, 256, 0) == SOCKET_ERROR)
+		DWORD recvByte = 0;
+		DWORD offset = 0;
+
+		if ((recvByte = recv(m_hSocket, buffer, 256, 0)) == SOCKET_ERROR)
 		{
 #ifdef _DEBUG
 			printf("Fail >> NetworkEngine.cpp : recv\n");
@@ -318,113 +372,152 @@ UINT WINAPI NetworkEngine::_RecvThread()
 #ifdef _DEBUG
 		printf("Success >> NetworkEngine.cpp : recv\n");
 #endif
-		int* type = reinterpret_cast<int*>(buffer);
 
-
-		switch (*type)
+		while (recvByte - offset > 0)
 		{
-		case 11: // ActionPacket, 데이터 변경을 위한 type
-			// 접속한 플레이어의 값 설정을 위해
-			tempAP = reinterpret_cast<ActionPacket*>(buffer);
+			int* type = reinterpret_cast<int*>(buffer + offset);
 
-			/***** m_RecvAPQueueMutex : 시작 *****/
-			m_RecvAPQueueMutex.lock();
 
-			if (m_RecvActionPacketQueue->size() < QUEUE_LIMIT_SIZE)
+			switch (*type)
 			{
-				m_RecvActionPacketQueue->push(*tempAP);
-#ifdef _DEBUG
-				m_RecvAPQueueMutex.unlock();
-				/***** m_RecvAPQueueMutex : 종료 *****/
-
-				printf("Pop >> NetworkEngine.cpp : ActionPacket -> type = %d, id = %d, position = {%f %f %f}, rotation = {%f %f %f}\n",
-					tempAP->type,
-					tempAP->id,
-					tempAP->position[0],
-					tempAP->position[1],
-					tempAP->position[2],
-					tempAP->rotation[0],
-					tempAP->rotation[1],
-					tempAP->rotation[2]
-				);
+			case 11: // ActionPacket, 데이터 변경을 위한 type
+				// 접속한 플레이어의 값 설정을 위해
+				tempAP = reinterpret_cast<ActionPacket*>(buffer + offset);
 
 				/***** m_RecvAPQueueMutex : 시작 *****/
 				m_RecvAPQueueMutex.lock();
-#endif
-			}
 
-			m_RecvAPQueueMutex.unlock();
-			/***** m_RecvAPQueueMutex : 종료 *****/
-
-			break;
-
-		case 21: // EventPacket
-			/***** m_RecvEPQueueMutex : 시작 *****/
-			m_RecvEPQueueMutex.lock();
-
-			if (m_RecvEventPacketQueue->size() < QUEUE_LIMIT_SIZE)
-			{
-				tempEP = reinterpret_cast<EventPacket*>(buffer);
-
-				m_RecvEventPacketQueue->push(*tempEP);
+				if (m_RecvActionPacketQueue->size() < QUEUE_LIMIT_SIZE)
+				{
+					m_RecvActionPacketQueue->push(*tempAP);
 #ifdef _DEBUG
+					m_RecvAPQueueMutex.unlock();
+					/***** m_RecvAPQueueMutex : 종료 *****/
+
+					printf("Pop >> NetworkEngine.cpp : ActionPacket -> type = %d, id = %d, position = {%f %f %f}, rotation = {%f %f %f}\n",
+						tempAP->type,
+						tempAP->id,
+						tempAP->position[0],
+						tempAP->position[1],
+						tempAP->position[2],
+						tempAP->rotation[0],
+						tempAP->rotation[1],
+						tempAP->rotation[2]
+					);
+
+					/***** m_RecvAPQueueMutex : 시작 *****/
+					m_RecvAPQueueMutex.lock();
+#endif
+				}
+
+				m_RecvAPQueueMutex.unlock();
+				/***** m_RecvAPQueueMutex : 종료 *****/
+
+				offset += sizeof(ActionPacket);
+				break;
+
+			case 21: // EventPacket
+					 /***** m_RecvEPQueueMutex : 시작 *****/
+				m_RecvEPQueueMutex.lock();
+
+				if (m_RecvEventPacketQueue->size() < QUEUE_LIMIT_SIZE)
+				{
+					tempEP = reinterpret_cast<EventPacket*>(buffer + offset);
+
+					m_RecvEventPacketQueue->push(*tempEP);
+#ifdef _DEBUG
+					m_RecvEPQueueMutex.unlock();
+					/***** m_RecvEPQueueMutex : 종료 *****/
+
+					printf("Push >> NetworkEngine.cpp : EventPacket -> type = %d, id = %d, position = {%f %f %f}, state = %s\n",
+						tempEP->type,
+						tempEP->id,
+						tempEP->position[0],
+						tempEP->position[1],
+						tempEP->position[2],
+						tempEP->state ? "true" : "false"
+					);
+
+					/***** m_RecvEPQueueMutex : 시작 *****/
+					m_RecvEPQueueMutex.lock();
+#endif
+				}
 				m_RecvEPQueueMutex.unlock();
 				/***** m_RecvEPQueueMutex : 종료 *****/
 
-				printf("Push >> NetworkEngine.cpp : EventPacket -> type = %d, id = %d, position = {%f %f %f}, state = %s\n",
-					tempEP->type,
-					tempEP->id,
-					tempEP->position[0],
-					tempEP->position[1],
-					tempEP->position[2],
-					tempEP->state ? "true" : "false"
-				);
+				offset += sizeof(EventPacket);
+				break;
 
-				/***** m_RecvEPQueueMutex : 시작 *****/
-				m_RecvEPQueueMutex.lock();
-#endif
-			}
-			m_RecvEPQueueMutex.unlock();
-			/***** m_RecvEPQueueMutex : 종료 *****/
-
-			break;
-
-		case 30: // UserPacket, 자신을 등록하기 위한 type
-		case 31: // UserPacket, 타인들을 등록하기 위한 type
-			tempUP = reinterpret_cast<UserPacket*>(buffer);
-
-			/***** m_RecvUPQueueMutex : 시작 *****/
-			m_RecvUPQueueMutex.lock();
-
-			if (m_RecvUserPacketQueue->size() < QUEUE_LIMIT_SIZE)
-			{
-				m_RecvUserPacketQueue->push(*tempUP);
-#ifdef _DEBUG
-				m_RecvUPQueueMutex.unlock();
-				/***** m_RecvUPQueueMutex : 종료 *****/
-
-				printf("Pop >> NetworkEngine.cpp : UserPacket -> type = %d, id = %d, position = {%f %f %f}, rotation = {%f %f %f}\n",
-					tempUP->type,
-					tempUP->id,
-					tempUP->position[0],
-					tempUP->position[1],
-					tempUP->position[2],
-					tempUP->rotation[0],
-					tempUP->rotation[1],
-					tempUP->rotation[2]
-				);
+			case 30: // UserPacket30, 초기화를 위한 type
+				tempUP = reinterpret_cast<UserPacket*>(buffer + offset);
 
 				/***** m_RecvUPQueueMutex : 시작 *****/
-				m_RecvUPQueueMutex.lock();
+				m_RecvUP30QueueMutex.lock();
+
+				if (m_RecvUserPacket30Queue->size() < QUEUE_LIMIT_SIZE)
+				{
+					m_RecvUserPacket30Queue->push(*tempUP);
+#ifdef _DEBUG
+					m_RecvUP30QueueMutex.unlock();
+					/***** m_RecvUPQueueMutex : 종료 *****/
+
+					printf("Pop >> NetworkEngine.cpp : UserPacket30 -> type = %d, id = %d, position = {%f %f %f}, rotation = {%f %f %f}\n",
+						tempUP->type,
+						tempUP->id,
+						tempUP->position[0],
+						tempUP->position[1],
+						tempUP->position[2],
+						tempUP->rotation[0],
+						tempUP->rotation[1],
+						tempUP->rotation[2]
+					);
+
+					/***** m_RecvUPQueueMutex : 시작 *****/
+					m_RecvUP30QueueMutex.lock();
 #endif
+				}
+
+				m_RecvUP30QueueMutex.unlock();
+				/***** m_RecvUPQueueMutex : 종료 *****/
+				offset += sizeof(UserPacket);
+				break;
+
+			case 31: // UserPacket31, 값 변경을 위한 type
+				tempUP = reinterpret_cast<UserPacket*>(buffer + offset);
+
+				/***** m_RecvUPQueueMutex : 시작 *****/
+				m_RecvUP31QueueMutex.lock();
+
+				if (m_RecvUserPacket31Queue->size() < QUEUE_LIMIT_SIZE)
+				{
+					m_RecvUserPacket31Queue->push(*tempUP);
+#ifdef _DEBUG
+					m_RecvUP31QueueMutex.unlock();
+					/***** m_RecvUPQueueMutex : 종료 *****/
+
+					printf("Pop >> NetworkEngine.cpp : UserPacket31 -> type = %d, id = %d, position = {%f %f %f}, rotation = {%f %f %f}\n",
+						tempUP->type,
+						tempUP->id,
+						tempUP->position[0],
+						tempUP->position[1],
+						tempUP->position[2],
+						tempUP->rotation[0],
+						tempUP->rotation[1],
+						tempUP->rotation[2]
+					);
+
+					/***** m_RecvUPQueueMutex : 시작 *****/
+					m_RecvUP31QueueMutex.lock();
+#endif
+				}
+
+				m_RecvUP31QueueMutex.unlock();
+				/***** m_RecvUPQueueMutex : 종료 *****/
+
+				offset += sizeof(UserPacket);
+				break;
 			}
-
-			m_RecvUPQueueMutex.unlock();
-			/***** m_RecvUPQueueMutex : 종료 *****/
-
-			break;
 		}
-
 	}
 
 	_endthreadex(0);
@@ -435,21 +528,38 @@ bool NetworkEngine::GetConnectFlag()
 	return m_ConnectFlag;
 }
 
-std::queue<UserPacket>* NetworkEngine::GetSendUPQueue()
+std::queue<UserPacket>* NetworkEngine::GetSendUP30Queue()
 {
-	return m_SendUserPacketQueue;
+	return m_SendUserPacket30Queue;
 }
-std::queue<UserPacket>* NetworkEngine::GetRecvUPQueue()
+std::queue<UserPacket>* NetworkEngine::GetRecvUP30Queue()
 {
-	return m_RecvUserPacketQueue;
+	return m_RecvUserPacket30Queue;
 }
-std::mutex& NetworkEngine::GetSendUPQueueMutex()
+std::mutex& NetworkEngine::GetSendUP30QueueMutex()
 {
-	return m_SendUPQueueMutex;
+	return m_SendUP30QueueMutex;
 }
-std::mutex& NetworkEngine::GetRecvUPQueueMutex()
+std::mutex& NetworkEngine::GetRecvUP30QueueMutex()
 {
-	return m_RecvUPQueueMutex;
+	return m_RecvUP30QueueMutex;
+}
+
+std::queue<UserPacket>* NetworkEngine::GetSendUP31Queue()
+{
+	return m_SendUserPacket31Queue;
+}
+std::queue<UserPacket>* NetworkEngine::GetRecvUP31Queue()
+{
+	return m_RecvUserPacket31Queue;
+}
+std::mutex& NetworkEngine::GetSendUP31QueueMutex()
+{
+	return m_SendUP31QueueMutex;
+}
+std::mutex& NetworkEngine::GetRecvUP31QueueMutex()
+{
+	return m_RecvUP31QueueMutex;
 }
 
 std::queue<ActionPacket>* NetworkEngine::GetSendAPQueue()

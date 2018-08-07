@@ -381,7 +381,7 @@ bool RenderingEngine::Render(float deltaTime)
 
 
 	/***** 모델 렌더링 : 시작 *****/	
-	m_ModelManager->Render(m_Direct3D->GetDeviceContext(), viewMatrix, projectionMatrix, m_Camera->GetPosition(), deltaTime); // 모델 매니저로부터 모델들을 렌더링합니다.
+	m_ModelManager->Render(m_Direct3D, m_Direct3D->GetDeviceContext(), viewMatrix, projectionMatrix, m_Camera->GetPosition(), deltaTime); // 모델 매니저로부터 모델들을 렌더링합니다.
 	/***** 모델 렌더링 : 종료 *****/
 
 

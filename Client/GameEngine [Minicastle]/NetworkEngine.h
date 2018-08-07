@@ -26,10 +26,15 @@ private:
 public:
 	bool GetConnectFlag();
 
-	std::queue<UserPacket>* GetSendUPQueue();
-	std::queue<UserPacket>* GetRecvUPQueue();
-	std::mutex& GetSendUPQueueMutex();
-	std::mutex& GetRecvUPQueueMutex();
+	std::queue<UserPacket>* GetSendUP30Queue();
+	std::queue<UserPacket>* GetRecvUP30Queue();
+	std::mutex& GetSendUP30QueueMutex();
+	std::mutex& GetRecvUP30QueueMutex();
+
+	std::queue<UserPacket>* GetSendUP31Queue();
+	std::queue<UserPacket>* GetRecvUP31Queue();
+	std::mutex& GetSendUP31QueueMutex();
+	std::mutex& GetRecvUP31QueueMutex();
 
 	std::queue<ActionPacket>* GetSendAPQueue();
 	std::queue<ActionPacket>* GetRecvAPQueue();
@@ -66,10 +71,15 @@ private:
 
 	bool m_ConnectFlag = false;
 
-	std::queue<UserPacket>* m_SendUserPacketQueue;
-	std::queue<UserPacket>* m_RecvUserPacketQueue;
-	std::mutex m_SendUPQueueMutex;
-	std::mutex m_RecvUPQueueMutex;
+	std::queue<UserPacket>* m_SendUserPacket30Queue;
+	std::queue<UserPacket>* m_RecvUserPacket30Queue;
+	std::mutex m_SendUP30QueueMutex;
+	std::mutex m_RecvUP30QueueMutex;
+
+	std::queue<UserPacket>* m_SendUserPacket31Queue;
+	std::queue<UserPacket>* m_RecvUserPacket31Queue;
+	std::mutex m_SendUP31QueueMutex;
+	std::mutex m_RecvUP31QueueMutex;
 
 	std::queue<ActionPacket>* m_SendActionPacketQueue;
 	std::queue<ActionPacket>* m_RecvActionPacketQueue;

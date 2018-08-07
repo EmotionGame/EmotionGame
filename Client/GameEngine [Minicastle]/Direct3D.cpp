@@ -376,15 +376,16 @@ bool Direct3D::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	// Clear the blend state description.
 	D3D11_BLEND_DESC blendStateDescription;
 	ZeroMemory(&blendStateDescription, sizeof(D3D11_BLEND_DESC));
+	blendStateDescription.AlphaToCoverageEnable = true; // true로 하면 알파가 RGB를 가려버리는 문제를 해결합니다.
 
 	// Create an alpha enabled blend state description.
 	blendStateDescription.RenderTarget[0].BlendEnable = TRUE;
-	blendStateDescription.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
-	blendStateDescription.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-	blendStateDescription.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-	blendStateDescription.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-	blendStateDescription.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-	blendStateDescription.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blendStateDescription.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE; // 픽셀 셰이더 outputs의 RGB 값에 대한 연산을 수행
+	blendStateDescription.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA; // render target의 현재 RGB 값에 대한 연산을 수행
+	blendStateDescription.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD; // SrcBlend와 DestBlend를 어떻게 combine 하는 지를 정의
+	blendStateDescription.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;  // 픽셀 셰이더 outputs의 A 값에 대한 연산을 수행, _COLOR 옵션은 허용되지 않습니다.
+	blendStateDescription.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO; // render target의 현재 A 값에 대한 연산을 수행, _COLOR 옵션은 허용되지 않습니다.
+	blendStateDescription.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD; // SrcBlendAlpha와 DestBlendAlpha를 어떻게 combine 하는 지를 정의
 	blendStateDescription.RenderTarget[0].RenderTargetWriteMask = 0x0f;
 
 	// Create the blend state using the description.

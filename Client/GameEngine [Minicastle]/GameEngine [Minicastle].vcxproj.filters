@@ -185,6 +185,12 @@
     <ClInclude Include="Player.h">
       <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model</Filter>
     </ClInclude>
+    <ClInclude Include="DelayLoadingShader.h">
+      <Filter>Files\_GameEngine\_RenderingEngine\_Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="Event.h">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -289,6 +295,12 @@
     <ClCompile Include="Player.cpp">
       <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model</Filter>
     </ClCompile>
+    <ClCompile Include="DelayLoadingShader.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine\_Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="Event.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="HLSL\Font.ps">
@@ -321,5 +333,7 @@
     <None Include="HLSL\Terrain_vs.hlsl">
       <Filter>HLSL</Filter>
     </None>
+    <None Include="HLSL\DelayLoading_ps.hlsl" />
+    <None Include="HLSL\DelayLoading_vs.hlsl" />
   </ItemGroup>
 </Project>

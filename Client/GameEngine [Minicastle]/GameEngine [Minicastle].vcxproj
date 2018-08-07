@@ -162,7 +162,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="dds.h" />
+    <ClInclude Include="DelayLoadingShader.h" />
     <ClInclude Include="DirectXHelpers.h" />
+    <ClInclude Include="Event.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="LoaderHelpers.h" />
     <ClInclude Include="pch.h" />
@@ -204,6 +206,8 @@
     <ClInclude Include="WICTextureLoader.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DelayLoadingShader.cpp" />
+    <ClCompile Include="Event.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="QuadTree.cpp" />
@@ -277,6 +281,14 @@
       <FileType>Document</FileType>
     </None>
     <None Include="HLSL\Terrain_vs.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="HLSL\DelayLoading_ps.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="HLSL\DelayLoading_vs.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

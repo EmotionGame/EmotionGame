@@ -5,8 +5,24 @@ LocalLightShader::LocalLightShader()
 {
 }
 
-LocalLightShader::LocalLightShader(const LocalLightShader& other)
+LocalLightShader::LocalLightShader(const LocalLightShader& rOther)
 {
+}
+
+LocalLightShader& LocalLightShader::operator=(const LocalLightShader& rOther)
+{
+	m_hwnd = rOther.m_hwnd;
+
+	m_vertexShader = rOther.m_vertexShader;
+	m_pixelShader = rOther.m_pixelShader;
+	m_layout = rOther.m_layout;
+	m_sampleState = rOther.m_sampleState;
+
+	m_matrixBuffer = rOther.m_matrixBuffer;
+	m_cameraBuffer = rOther.m_cameraBuffer;
+	m_lightBuffer = rOther.m_lightBuffer;
+
+	return *this;
 }
 
 LocalLightShader::~LocalLightShader()

@@ -15,3 +15,7 @@
 - i번 항목의 경로를 path에 획득 : DragQueryFile((HDROP)ah_drop_info, i, temp_path, MAX_PATH);
 - 드랍된 항목이 파일인지 폴더인지 체크 : if(GetFileAttributes(temp_path) & FILE_ATTRIBUTE_DIRECTORY)
 - https://blog.naver.com/tipsware/221148420395
+
+<지형 제작>
+지형을 만들어서 파일을 뽑아주는 프로그램이 존재합니다.
+- https://www.world-machine.com/

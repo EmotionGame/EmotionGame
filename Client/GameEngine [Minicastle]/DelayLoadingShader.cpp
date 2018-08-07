@@ -1,54 +1,51 @@
 ﻿#include "stdafx.h"
-#include "SkyDomeShader.h"
+#include "DelayLoadingShader.h"
 
-SkyDomeShader::SkyDomeShader()
+DelayLoadingShader::DelayLoadingShader()
+{
+}
+DelayLoadingShader::~DelayLoadingShader()
 {
 }
 
-SkyDomeShader::SkyDomeShader(const SkyDomeShader& other)
-{
-}
-
-SkyDomeShader::~SkyDomeShader()
-{
-}
-
-bool SkyDomeShader::Initialize(ID3D11Device* pDevice, HWND hwnd)
+bool DelayLoadingShader::Initialize(ID3D11Device* pDevice, HWND hwnd)
 {
 	m_hwnd = hwnd;
 
 	// 정점 및 픽셀 쉐이더를 초기화합니다.
-	return InitializeShader(pDevice, hwnd, L"HLSL/SkyDome_vs.hlsl", L"HLSL/SkyDome_ps.hlsl");
+	return InitializeShader(pDevice, hwnd, const_cast<wchar_t*>(L"HLSL/DelayLoading_vs.hlsl"), const_cast<wchar_t*>(L"HLSL/DelayLoading_ps.hlsl"));
 }
 
-void SkyDomeShader::Shutdown()
+void DelayLoadingShader::Shutdown()
 {
 	// 버텍스 및 픽셀 쉐이더와 관련된 객체를 종료합니다.
 	ShutdownShader();
 }
 
-bool SkyDomeShader::Render(ID3D11DeviceContext* pDeviceContext, int indexCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* pTexture)
+bool DelayLoadingShader::Render(ID3D11DeviceContext* pDeviceContext, int indexCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* pTexture)
 {
 	// 렌더링에 사용할 셰이더 매개 변수를 설정합니다.
 	if (!SetShaderParameters(pDeviceContext, worldMatrix, viewMatrix, projectionMatrix, pTexture))
 	{
-		MessageBox(m_hwnd, L"SkyDomeShader.cpp : SetShaderParameters(pDeviceContext, worldMatrix, viewMatrix, projectionMatrix, pTexture)", L"Error", MB_OK);
+		MessageBox(m_hwnd, L"DelayLoadingShader.cpp : SetShaderParameters(pDeviceContext, worldMatrix, viewMatrix, projectionMatrix, pTexture)", L"Error", MB_OK);
 		return false;
 	}
 
-	// 준비한 버퍼를 셰이더로 렌더링 합니다.
+	// 설정된 버퍼를 셰이더로 렌더링한다.
 	RenderShader(pDeviceContext, indexCount);
 
 	return true;
 }
 
-bool SkyDomeShader::InitializeShader(ID3D11Device* pDevice, HWND hwnd, const WCHAR* pVertexShaderFileName, const WCHAR* pPixelShaderFileName)
+bool DelayLoadingShader::InitializeShader(ID3D11Device* pDevice, HWND hwnd, WCHAR* pVertexShaderFileName, WCHAR* pPixelShaderFileName)
 {
+	HRESULT hResult;
 	ID3D10Blob* errorMessage = nullptr;
 
 	// 버텍스 쉐이더 코드를 컴파일한다.
 	ID3D10Blob* vertexShaderBuffer = nullptr;
-	if (FAILED(D3DCompileFromFile(pVertexShaderFileName, NULL, NULL, "SkyDomeVertexShader", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &vertexShaderBuffer, &errorMessage)))
+	hResult = D3DCompileFromFile(pVertexShaderFileName, NULL, NULL, "DelayLoadingVertexShader", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &vertexShaderBuffer, &errorMessage);
+	if (FAILED(hResult))
 	{
 		// 셰이더 컴파일 실패시 오류메시지를 출력합니다.
 		if (errorMessage)
@@ -66,7 +63,8 @@ bool SkyDomeShader::InitializeShader(ID3D11Device* pDevice, HWND hwnd, const WCH
 
 	// 픽셀 쉐이더 코드를 컴파일한다.
 	ID3D10Blob* pixelShaderBuffer = nullptr;
-	if (FAILED(D3DCompileFromFile(pPixelShaderFileName, NULL, NULL, "SkyDomePixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &pixelShaderBuffer, &errorMessage)))
+	hResult = D3DCompileFromFile(pPixelShaderFileName, NULL, NULL, "DelayLoadingPixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &pixelShaderBuffer, &errorMessage);
+	if (FAILED(hResult))
 	{
 		// 셰이더 컴파일 실패시 오류메시지를 출력합니다.
 		if (errorMessage)
@@ -83,21 +81,22 @@ bool SkyDomeShader::InitializeShader(ID3D11Device* pDevice, HWND hwnd, const WCH
 	}
 
 	// 버퍼로부터 정점 셰이더를 생성한다.
-	if (FAILED(pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &m_vertexShader)))
+	hResult = pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &m_vertexShader);
+	if (FAILED(hResult))
 	{
-		MessageBox(m_hwnd, L"SkyDomeShader.cpp : FAILED(pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &m_vertexShader))", L"Error", MB_OK);
+		MessageBox(m_hwnd, L"DelayLoadingShader.cpp : device->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &m_vertexShader);", L"Error", MB_OK);
 		return false;
 	}
 
 	// 버퍼에서 픽셀 쉐이더를 생성합니다.
-	if (FAILED(pDevice->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_pixelShader)))
+	hResult = pDevice->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_pixelShader);
+	if (FAILED(hResult))
 	{
-		MessageBox(m_hwnd, L"SkyDomeShader.cpp : FAILED(pDevice->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_pixelShader))", L"Error", MB_OK);
+		MessageBox(m_hwnd, L"DelayLoadingShader.cpp : device->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_pixelShader);", L"Error", MB_OK);
 		return false;
 	}
 
 	// 정점 입력 레이아웃 구조체를 설정합니다.
-	// 이 설정은 ModelClass와 셰이더의 VertexType 구조와 일치해야합니다.
 	D3D11_INPUT_ELEMENT_DESC polygonLayout[2];
 	polygonLayout[0].SemanticName = "POSITION";
 	polygonLayout[0].SemanticIndex = 0;
@@ -118,10 +117,11 @@ bool SkyDomeShader::InitializeShader(ID3D11Device* pDevice, HWND hwnd, const WCH
 	// 레이아웃의 요소 수를 가져옵니다.
 	UINT numElements = sizeof(polygonLayout) / sizeof(polygonLayout[0]);
 
-	// 정점 입력 레이아웃을 생성합니다.
-	if (FAILED(pDevice->CreateInputLayout(polygonLayout, numElements, vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_layout)))
+	// 정점 입력 레이아웃을 만듭니다.
+	hResult = pDevice->CreateInputLayout(polygonLayout, numElements, vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_layout);
+	if (FAILED(hResult))
 	{
-		MessageBox(m_hwnd, L"SkyDomeShader.cpp : FAILED(pDevice->CreateInputLayout(polygonLayout, numElements, vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_layout))", L"Error", MB_OK);
+		MessageBox(m_hwnd, L"DelayLoadingShader.cpp : device->CreateInputLayout(polygonLayout, numElements, vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_layout);", L"Error", MB_OK);
 		return false;
 	}
 
@@ -132,27 +132,10 @@ bool SkyDomeShader::InitializeShader(ID3D11Device* pDevice, HWND hwnd, const WCH
 	pixelShaderBuffer->Release();
 	pixelShaderBuffer = 0;
 
-	// 버텍스 쉐이더에있는 동적 행렬 상수 버퍼의 구조체를 설정합니다.
-	D3D11_BUFFER_DESC matrixBufferDesc;
-	matrixBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	matrixBufferDesc.ByteWidth = sizeof(MatrixBufferType);
-	matrixBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	matrixBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	matrixBufferDesc.MiscFlags = 0;
-	matrixBufferDesc.StructureByteStride = 0;
-
-	// 이 클래스 내에서 정점 셰이더 상수 버퍼에 액세스 할 수 있도록 상수 버퍼 포인터를 생성합니다.
-	if (FAILED(pDevice->CreateBuffer(&matrixBufferDesc, NULL, &m_matrixBuffer)))
-	{
-		MessageBox(m_hwnd, L"SkyDomeShader.cpp : FAILED(pDevice->CreateBuffer(&matrixBufferDesc, NULL, &m_matrixBuffer))", L"Error", MB_OK);
-		return false;
-	}
-
-	// 픽셀 쉐이더에있는 그라데이션 동적 상수 버퍼의 설명을 설정합니다.
-	// D3D11_BIND_CONSTANT_BUFFER를 사용하면 ByteWidth가 항상 16의 배수 여야하며 그렇지 않으면 CreateBuffer가 실패합니다.
+	// 텍스처 샘플러 상태 구조체를 생성 및 설정합니다.
 	D3D11_SAMPLER_DESC samplerDesc;
-	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP; //WRAP: 매핑을 할때 끝이모자라면 끝에있던 이미지를 당겨서 붙이는것 에 관련된 셋팅
+	samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerDesc.MipLODBias = 0.0f;
@@ -165,56 +148,73 @@ bool SkyDomeShader::InitializeShader(ID3D11Device* pDevice, HWND hwnd, const WCH
 	samplerDesc.MinLOD = 0;
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
-	if (FAILED(pDevice->CreateSamplerState(&samplerDesc, &m_sampleState)))
+	// 텍스처 샘플러 상태를 만듭니다.
+	hResult = pDevice->CreateSamplerState(&samplerDesc, &m_sampleState);
+	if (FAILED(hResult))
 	{
-		MessageBox(m_hwnd, L"SkyDomeShader.cpp : FAILED(pDevice->CreateSamplerState(&samplerDesc, &m_sampleState))", L"Error", MB_OK);
+		MessageBox(m_hwnd, L"DelayLoadingShader.cpp : device->CreateSamplerState(&samplerDesc, &m_sampleState);", L"Error", MB_OK);
+		return false;
+	}
+
+	// 정점 셰이더에 있는 행렬 상수 버퍼의 구조체를 작성합니다.
+	D3D11_BUFFER_DESC matrixBufferDesc;
+	matrixBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	matrixBufferDesc.ByteWidth = sizeof(MatrixBufferType);
+	matrixBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	matrixBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	matrixBufferDesc.MiscFlags = 0;
+	matrixBufferDesc.StructureByteStride = 0;
+
+	// 상수 버퍼 포인터를 만들어 이 클래스에서 정점 셰이더 상수 버퍼에 접근할 수 있게 합니다.
+	hResult = pDevice->CreateBuffer(&matrixBufferDesc, NULL, &m_matrixBuffer);
+	if (FAILED(hResult))
+	{
+		MessageBox(m_hwnd, L"DelayLoadingShader.cpp : device->CreateBuffer(&matrixBufferDesc, NULL, &m_matrixBuffer);", L"Error", MB_OK);
 		return false;
 	}
 
 	return true;
 }
 
-
-void SkyDomeShader::ShutdownShader()
+void DelayLoadingShader::ShutdownShader()
 {
-	// Release the sampler state.
-	if (m_sampleState)
-	{
-		m_sampleState->Release();
-		m_sampleState = 0;
-	}
-
 	// 행렬 상수 버퍼를 해제합니다.
 	if (m_matrixBuffer)
 	{
 		m_matrixBuffer->Release();
-		m_matrixBuffer = 0;
+		m_matrixBuffer = nullptr;
+	}
+
+	// 샘플러 상태를 해제한다.
+	if (m_sampleState)
+	{
+		m_sampleState->Release();
+		m_sampleState = nullptr;
 	}
 
 	// 레이아웃을 해제합니다.
 	if (m_layout)
 	{
 		m_layout->Release();
-		m_layout = 0;
+		m_layout = nullptr;
 	}
 
 	// 픽셀 쉐이더를 해제합니다.
 	if (m_pixelShader)
 	{
 		m_pixelShader->Release();
-		m_pixelShader = 0;
+		m_pixelShader = nullptr;
 	}
 
 	// 버텍스 쉐이더를 해제합니다.
 	if (m_vertexShader)
 	{
 		m_vertexShader->Release();
-		m_vertexShader = 0;
+		m_vertexShader = nullptr;
 	}
 }
 
-
-void SkyDomeShader::OutputShaderErrorMessage(ID3D10Blob* pErrorMessage, HWND hwnd, const WCHAR* pShaderFileName)
+void DelayLoadingShader::OutputShaderErrorMessage(ID3D10Blob* pErrorMessage, HWND hwnd, WCHAR* pShaderFileName)
 {
 	// 에러 메시지를 출력창에 표시합니다.
 	OutputDebugStringA(reinterpret_cast<const char*>(pErrorMessage->GetBufferPointer()));
@@ -227,8 +227,7 @@ void SkyDomeShader::OutputShaderErrorMessage(ID3D10Blob* pErrorMessage, HWND hwn
 	MessageBox(hwnd, L"Error compiling shader.", pShaderFileName, MB_OK);
 }
 
-
-bool SkyDomeShader::SetShaderParameters(ID3D11DeviceContext* pDeviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* pTexture)
+bool DelayLoadingShader::SetShaderParameters(ID3D11DeviceContext* pDeviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* pTexture)
 {
 	// 행렬을 transpose하여 셰이더에서 사용할 수 있게 합니다
 	worldMatrix = XMMatrixTranspose(worldMatrix);
@@ -239,35 +238,35 @@ bool SkyDomeShader::SetShaderParameters(ID3D11DeviceContext* pDeviceContext, XMM
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	if (FAILED(pDeviceContext->Map(m_matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource)))
 	{
-		MessageBox(m_hwnd, L"SkyDomeShader.cpp : FAILED(pDeviceContext->Map(m_matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource))", L"Error", MB_OK);
+		MessageBox(m_hwnd, L"DelayLoadingShader.cpp : deviceContext->Map(m_matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource)", L"Error", MB_OK);
 		return false;
 	}
 
 	// 상수 버퍼의 데이터에 대한 포인터를 가져옵니다.
-	MatrixBufferType* dataPtr = (MatrixBufferType*)mappedResource.pData;
+	MatrixBufferType* dataPtr_vs = (MatrixBufferType*)mappedResource.pData;
 
 	// 상수 버퍼에 행렬을 복사합니다.
-	dataPtr->world = worldMatrix;
-	dataPtr->view = viewMatrix;
-	dataPtr->projection = projectionMatrix;
+	dataPtr_vs->world = worldMatrix;
+	dataPtr_vs->view = viewMatrix;
+	dataPtr_vs->projection = projectionMatrix;
 
 	// 상수 버퍼의 잠금을 풉니다.
 	pDeviceContext->Unmap(m_matrixBuffer, 0);
 
 	// 정점 셰이더에서의 상수 버퍼의 위치를 설정합니다.
-	unsigned bufferNumber = 0;
+	unsigned int bufferNumber = 0;
 
 	// 마지막으로 정점 셰이더의 상수 버퍼를 바뀐 값으로 바꿉니다.
 	pDeviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_matrixBuffer);
 
-	// 마지막으로 픽셀 쉐이더에 텍스처 리소스를 넘겨줍니다.
+	// 픽셀 셰이더에서 셰이더 텍스처 리소스를 설정합니다.
 	pDeviceContext->PSSetShaderResources(0, 1, &pTexture);
 
 	return true;
 }
 
 
-void SkyDomeShader::RenderShader(ID3D11DeviceContext* pDeviceContext, int indexCount)
+void DelayLoadingShader::RenderShader(ID3D11DeviceContext* pDeviceContext, int indexCount)
 {
 	// 정점 입력 레이아웃을 설정합니다.
 	pDeviceContext->IASetInputLayout(m_layout);
@@ -276,7 +275,7 @@ void SkyDomeShader::RenderShader(ID3D11DeviceContext* pDeviceContext, int indexC
 	pDeviceContext->VSSetShader(m_vertexShader, NULL, 0);
 	pDeviceContext->PSSetShader(m_pixelShader, NULL, 0);
 
-	// Set the sampler state in the pixel shader.
+	// 픽셀 쉐이더에서 샘플러 상태를 설정합니다.
 	pDeviceContext->PSSetSamplers(0, 1, &m_sampleState);
 
 	// 삼각형을 그립니다.

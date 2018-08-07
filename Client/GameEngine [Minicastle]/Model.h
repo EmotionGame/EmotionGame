@@ -1,12 +1,15 @@
 #pragma once
+#include "DelayLoadingShader.h"
 #include "LocalLightShader.h"
 #include "LocalLightAnimationShader.h"
+#include "Texture.h"
 
-class Texture;
 class HID;
+class Direct3D;
 
 class Model : public AlignedAllocationPolicy<16>
 {
+/********** 파일 로딩 : 시작 **********/
 private:
 	struct Info
 	{
@@ -75,18 +78,56 @@ private:
 	bool LoadMaterial(char* pFileName, unsigned int meshCount);
 	bool LoadGlobalOffPosition(char* pFileName);
 	bool LoadFinalTransform(char* pFileName, unsigned int meshCount, unsigned int animStackCount);
+/********** 파일 로딩 : 종료 **********/
+
+
+/********** 지연 로딩 : 시작 **********/
+private:
+	struct DelayLoadingVertexType
+	{
+		XMFLOAT3 position;
+		XMFLOAT2 texture;
+	};
 
 public:
-	Model();
 	Model(const Model& rOther);
+	bool DelayLoadingInitialize(ID3D11Device* pDevice, HWND hwnd, WCHAR* pTextureFileName, XMFLOAT3 modelScaling, XMFLOAT3 modelRotation, XMFLOAT3 modelTranslation);
+	bool DelayLoadingBuffers(ID3D11Device* pDevice);
+	void DelayLoadingRenderBuffers(ID3D11DeviceContext* pDeviceContext);
+
+	bool IsDelayLoadingInitilized();
+
+private:
+	HWND m_hwnd;
+
+	XMFLOAT3 m_ModelScaling = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	XMFLOAT3 m_ModelRotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	XMFLOAT3 m_ModelTranslation = XMFLOAT3(0.0f, 0.0f, 0.0f);
+
+	ID3D11Buffer * m_DelayLoadingVertexBuffer;
+	ID3D11Buffer* m_DelayLoadingIndexBuffer;
+
+	XMMATRIX m_DelayLoadingWorldMatrix;
+
+	bool m_DelayLoadingInitilized = false;
+	std::mutex m_DelayLoadingInitMutex;
+
+	DelayLoadingShader m_DelayLoadingShader;
+
+	Texture m_DelayLoadingTexture;
+
+/********** 지연 로딩 : 종료 **********/
+
+
+/********** 본 초기화 : 시작 **********/
+public:
+	Model();
+	Model& operator=(const Model& rOther);
 	~Model();
 
-	bool Initialize(ID3D11Device* pDevice, HWND hwnd,
-		char* pModelFileName, WCHAR* pTextureFileName,
-		XMFLOAT3 modelcaling, XMFLOAT3 modelRotation, XMFLOAT3 modelTranslation, 
-		bool specularZero, unsigned int animStackNum);
+	bool Initialize(ID3D11Device* pDevice, char* pModelFileName, WCHAR* pTextureFileName, XMFLOAT3 modelScaling, bool specularZero, unsigned int animStackNum);
 	void Shutdown();
-	bool Render(ID3D11DeviceContext* pDeviceContext, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, XMFLOAT3 cameraPosition, float deltaTime);
+	bool Render(Direct3D* pDirect3D, ID3D11DeviceContext* pDeviceContext, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, XMFLOAT3 cameraPosition, float deltaTime);
 
 	void MoveObejctToLookAt(XMFLOAT3 value);
 	void MoveObjectToLookAtUp(XMFLOAT3 value);
@@ -120,8 +161,6 @@ private:
 	XMMATRIX CalculateWorldMatrix();
 
 private:
-	HWND m_hwnd;
-
 	bool m_ActiveFlag = true;
 
 	std::unordered_map<unsigned int, ID3D11Buffer*> m_VertexBufferUMap;
@@ -132,11 +171,7 @@ private:
 
 	XMMATRIX m_worldMatrix = XMMatrixIdentity(); // 단위행렬로 초기화
 
-	/***** 제어 : 시작 *****/
-	XMFLOAT3 m_ModelScaling = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	XMFLOAT3 m_ModelRotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	XMFLOAT3 m_ModelTranslation = XMFLOAT3(0.0f, 0.0f, 0.0f);
-
+	/***** 모델 제어 : 시작 *****/
 	XMFLOAT3 m_DefaultLootAt = XMFLOAT3(0.0f, 0.0f, 1.0f);
 	XMFLOAT3 m_DefaultUp = XMFLOAT3(0.0f, 1.0f, 0.0f);
 	XMFLOAT3 m_DefaultSide = XMFLOAT3(1.0f, 0.0f, 0.0f);
@@ -148,12 +183,12 @@ private:
 	XMFLOAT3 m_cameraPosition = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 	float m_limitAngle = 60.0f;
-	/***** 제어 : 종료 *****/
+	/***** 모델 제어 : 종료 *****/
 
 	LocalLightShader m_LocalLightShader;
 	LocalLightAnimationShader m_LocalLightAnimationShader;
 
-	Texture* m_Texture = nullptr;
+	Texture m_Texture;
 
 	/***** KSM에서 로드한 데이터들 : 시작 *****/
 #define BUFFER_SIZE 4096
@@ -177,6 +212,8 @@ private:
 	};
 	// std::unordered_map<메시 번호, 애니메이션 스택에 따른 각 애니메이션 벡터>
 	std::unordered_map<unsigned int, std::vector<Animation>> m_Animations;
+
+	std::vector<unsigned int> m_IndexSize;
 	/***** KSM에서 로드한 데이터들 : 종료 *****/
 
 	/***** Animation 관리 : 시작 *****/
@@ -197,4 +234,6 @@ private:
 
 	std::mutex m_InitMutex;
 	bool m_Initilized = false;
+
+/********** 본 초기화 : 종료 **********/
 };
