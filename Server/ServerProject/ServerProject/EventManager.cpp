@@ -144,7 +144,7 @@ int EventManager::randomValue(clock_t t)
 	mt19937_64 rnd(rn());
 
 	//< 2단계. 분포 설정 ( 정수 )
-	uniform_int_distribution<int> range(0, 10);
+	uniform_int_distribution<int> range(128, 188);
 	random = range(rnd);
 	srand(t);
 	if (rand() % 2 == 0)

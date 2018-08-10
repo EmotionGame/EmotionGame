@@ -71,7 +71,7 @@ void MonsterManager::upDate()
 	case 3:case 4:
 	{
 		// 가까이 있으면 공격 / 가까운 유저 확인->이동
-		int userIndex = -1;
+		int userIndex = 0;
 		float min = INT_MAX;
 		float* pos = NULL;
 		for (int i = 0; i < _userManager->size(); i++) {
@@ -85,7 +85,7 @@ void MonsterManager::upDate()
 			}
 		}
 		// 거리내 있으면 공격
-		if (min <= 18 && tok >= ATK_SPEED) {
+		if (min <= 1.5 && tok >= ATK_SPEED) {
 			Monster_ATK* atk = new Monster_ATK;
 			// 대상에서 x 범위 내에 있는 유저 검색
 			atk = new Monster_ATK;
@@ -124,9 +124,9 @@ void MonsterManager::upDate()
 	}
 	// emotion 갱신
 	if ((clock() - emoTic) > 1000) {	
-		
-	
-		tic = clock();
+		for (int i = 0; i < 4; i++)
+			_monster.emotion[i] -= 1;
+		emoTic = clock();
 	}
 }
 
@@ -158,6 +158,7 @@ void MonsterManager::setEmostate(int lastEmo)
 
 void MonsterManager::setDirection(int userIndex, float distance)
 {
+	cout << "setDirection>>" << userIndex << endl;
 	float* pos = _userManager->getUserPos(userIndex);
 	for (int i = 0; i < 3; i++) {
 		_monster.rotation[i] = (pos[i] - _monster.position[i]) / distance;

@@ -318,8 +318,8 @@ UINT WINAPI IOCPServer::completionThread()
 					case ACTION_PACKET:
 					{
 						ActionPacket* action = reinterpret_cast<ActionPacket*>(&pIoData->buffer[offset]);
-						cout << "Action Packet Recv" << endl;
-						cout << pHandleData->sock << endl;
+						//cout << "Action Packet Recv" << endl;
+						//cout << pHandleData->sock << endl;
 						//cout << action->id << endl;
 						//cout << action->position[0] << action->position[1] << action->position[2] << endl;
 						//cout << action->rotation[0] << action->rotation[1] << action->rotation[2] << endl;
@@ -408,6 +408,7 @@ UINT WINAPI IOCPServer::completionThread()
 								{
 									broadcastSend(EVENT_PACKET, i);
 									_eventManager->updateEvent(i, clock());
+									cout << "Event 발생>>" << i << endl;
 									break;
 								}
 								case 3:case 4:case 5:
@@ -424,7 +425,7 @@ UINT WINAPI IOCPServer::completionThread()
 										// 유저가 해당 이벤트(i) 내
 										// 출력용
 										EventPacket* p = reinterpret_cast<EventPacket*>(_eventManager->getEvent(i));
-										cout << "Event 발생 & 습득 " << endl;
+										cout << "Event 습득>>" << endl;
 										cout << p->id << endl;
 										cout << p->position[0] << p->position[1] << p->position[2] << endl;
 										cout << p->state << endl;
@@ -461,6 +462,49 @@ UINT WINAPI IOCPServer::completionThread()
 					else
 						eventExpected = true;// atomic event
 				} // gamestart-event
+
+				//Monster
+				tok = clock() - tek;
+				if (tok >= 25) {
+					if (_monsterManager->getStart()
+						&& MonsterFlag.compare_exchange_weak(monsterExpected, false) && !MonsterFlag) {
+						// 이동-공격을 queue에 저장
+						_monsterManager->upDate();
+						char* data = _monsterManager->getJob();
+						if (data) {
+							// ATK
+							if ((*(int*)data) == MONSTER_PACKET_ATK) {
+								Monster_ATK* atk = reinterpret_cast<Monster_ATK*>(data);
+								_userManager->setUserHp(atk->target, _monsterManager->getDmg());
+
+								cout << "ATK>>" << atk->target << endl;
+								//출력용
+								Monster* a = (Monster*)_monsterManager->getMonsterInfo();
+								//cout << a->position[0] << " " << a->position[1] << " " << a->position[2] << endl;
+								/*
+								for (auto monster_iter = users.begin(); monster_iter != users.end(); monster_iter++) {
+								_userManager->setJob(monster_iter->second, _userManager->getUserInfo(atk->target));
+								jobQueue.push_back(monster_iter->second);
+								}
+								*/
+								broadcastSend(USER_UPDATE_PACKET, atk->target);
+							}
+							// 이동
+							else
+								/*
+								for (auto monster_iter = users.begin(); monster_iter != users.end(); monster_iter++) {
+								_userManager->setJob(monster_iter->second, data);
+								jobQueue.push_back(monster_iter->second);
+								}
+								*/
+								broadcastSend(MONSTER_PACKET, 0);
+						}
+						MonsterFlag = true;
+					}
+					else
+						monsterExpected = true;
+					tek = clock();
+				}
 			}// Network - while
 
 			// 새로운 overlapped 구조체를 생성하지 않고 그대로 재사용
@@ -564,10 +608,12 @@ UINT WINAPI IOCPServer::completionThread()
 							switch (i)
 							{
 							case 0:
+								cout << "몬스터가 오브젝트를 공격하기 시작" << endl;
 								_eventManager->updateEvent(i, clock());
 								break;
 							case 1:case 2:case 6:case 7:
 							{
+								cout << "Event 발생>>" << i << endl;
 								broadcastSend(EVENT_PACKET, i);
 								_eventManager->updateEvent(i, clock());
 								break;
@@ -584,7 +630,7 @@ UINT WINAPI IOCPServer::completionThread()
 									// 유저가 해당 이벤트(i) 내
 									// 출력용
 									EventPacket* p = reinterpret_cast<EventPacket*>(_eventManager->getEvent(i));
-									cout << "Event 발생 & 습득 " << endl;
+									cout << "Event 습득>>" << endl;
 									cout << p->id << endl;
 									cout << p->position[0] << p->position[1] << p->position[2] << endl;
 									cout << p->state << endl;
@@ -633,26 +679,30 @@ UINT WINAPI IOCPServer::completionThread()
 					if (data) {
 						// ATK
 						if ((*(int*)data) == MONSTER_PACKET_ATK) {
-							Monster_ATK* atk = reinterpret_cast<Monster_ATK*>(data); 
+							Monster_ATK* atk = reinterpret_cast<Monster_ATK*>(data);
 							_userManager->setUserHp(atk->target, _monsterManager->getDmg());
-							
-							cout << "ATK" << endl;
-							cout << atk->target << endl;
+
+							cout << "ATK>>"<<atk->target << endl;
 							//출력용
 							Monster* a = (Monster*)_monsterManager->getMonsterInfo();
-							cout << a->position[0] << " " << a->position[1] << " " << a->position[2] << endl;
-
+							//cout << a->position[0] << " " << a->position[1] << " " << a->position[2] << endl;
+							/*
 							for (auto monster_iter = users.begin(); monster_iter != users.end(); monster_iter++) {
-								_userManager->setJob(monster_iter->second, _userManager->getUserInfo(atk->target));
-								jobQueue.push_back(monster_iter->second);
+							_userManager->setJob(monster_iter->second, _userManager->getUserInfo(atk->target));
+							jobQueue.push_back(monster_iter->second);
 							}
+							*/
+							broadcastSend(USER_UPDATE_PACKET, atk->target);
 						}
 						// 이동
 						else
+							/*
 							for (auto monster_iter = users.begin(); monster_iter != users.end(); monster_iter++) {
-								_userManager->setJob(monster_iter->second, data);
-								jobQueue.push_back(monster_iter->second);
+							_userManager->setJob(monster_iter->second, data);
+							jobQueue.push_back(monster_iter->second);
 							}
+							*/
+							broadcastSend(MONSTER_PACKET, 0);
 					}
 					MonsterFlag = true;
 				}
