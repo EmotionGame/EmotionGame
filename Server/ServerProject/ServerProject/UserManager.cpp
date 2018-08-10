@@ -60,6 +60,7 @@ bool UserManager::setUserInfo(int index, char* data)
 }
 char* UserManager::getUserInfo(int index)
 {
+	lock_guard<mutex>lock(c_mutex[index]);
 	return reinterpret_cast<char*>(&users[index].second->userInfo);
 }
 bool UserManager::setUserPos(int index, char* data)
@@ -86,6 +87,8 @@ void UserManager::setUserHp(int index, int dmg)
 {
 	lock_guard<mutex>lock(c_mutex[index]);
 	users[index].second->userInfo.hp -= dmg;
+	if (users[index].second->userInfo.hp <= 0)
+		users[index].second->userInfo.hp = 0;
 }
 bool UserManager::setJob(int index, char* data)
 {
