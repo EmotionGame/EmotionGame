@@ -875,15 +875,20 @@ Model::Model(const Model& rOther)
 	m_DelayLoadingShader = rOther.m_DelayLoadingShader;
 
 	m_DelayLoadingTexture = rOther.m_DelayLoadingTexture;
+
+	m_CollisionType = rOther.m_CollisionType;
 }
 
-bool Model::DelayLoadingInitialize(ID3D11Device* pDevice, HWND hwnd, WCHAR* pTextureFileName, XMFLOAT3 modelScaling, XMFLOAT3 modelRotation, XMFLOAT3 modelTranslation)
+bool Model::DelayLoadingInitialize(ID3D11Device* pDevice, HWND hwnd, WCHAR* pTextureFileName, 
+	XMFLOAT3 modelScaling, XMFLOAT3 modelRotation, XMFLOAT3 modelTranslation, int collisionType)
 {
 	m_hwnd = hwnd;
 
 	m_ModelScaling = modelScaling;
 	m_ModelRotation = modelRotation;
 	m_ModelTranslation = modelTranslation;
+
+	m_CollisionType = collisionType;
 
 	if (!DelayLoadingBuffers(pDevice))
 	{
@@ -916,19 +921,17 @@ bool Model::DelayLoadingBuffers(ID3D11Device* pDevice)
 {
 	HRESULT hResult;
 
-	float scale = 1.0f;
-
 	DelayLoadingVertexType* vertices = new DelayLoadingVertexType[4];
-	vertices[0].position = XMFLOAT3(-1.0f * scale, 3.0f * scale, 0.0f);
+	vertices[0].position = XMFLOAT3(-1.0f, 3.0f, 0.0f);
 	vertices[0].texture = XMFLOAT2(0.0f, 0.0f);
 
-	vertices[1].position = XMFLOAT3(1.0f * scale, 3.0f * scale, 0.0f);
+	vertices[1].position = XMFLOAT3(1.0f, 3.0f, 0.0f);
 	vertices[1].texture = XMFLOAT2(1.0f, 0.0f);
 
-	vertices[2].position = XMFLOAT3(1.0f * scale, 0.0f * scale, 0.0f);
+	vertices[2].position = XMFLOAT3(1.0f, 0.0f, 0.0f);
 	vertices[2].texture = XMFLOAT2(1.0f, 1.0f);
 
-	vertices[3].position = XMFLOAT3(-1.0f * scale, 0.0f * scale, 0.0f);
+	vertices[3].position = XMFLOAT3(-1.0f, 0.0f, 0.0f);
 	vertices[3].texture = XMFLOAT2(0.0f, 1.0f);
 
 	unsigned int* indices = new unsigned int[6];
@@ -1100,6 +1103,8 @@ Model& Model::operator=(const Model& rOther)
 	}
 	m_LightDirection = rOther.m_LightDirection;
 
+	m_CollisionDetection.assign(rOther.m_CollisionDetection.begin(), rOther.m_CollisionDetection.end());
+
 	m_Initilized = rOther.m_Initilized;
 
 	return *this;
@@ -1114,9 +1119,6 @@ bool Model::Initialize(ID3D11Device* pDevice, char* pModelFileName, WCHAR* pText
 #ifdef _DEBUG
 	printf("Start >> Model.cpp : Initialize()\n");
 #endif
-
-	// 크기 재설정
-	m_ModelScaling = modelScaling;
 
 	// 머터리얼 값들 초기화
 	m_SpecularZero = specularZero;
@@ -1193,8 +1195,21 @@ bool Model::Initialize(ID3D11Device* pDevice, char* pModelFileName, WCHAR* pText
 		return false;
 	}
 
+	/***** 충돌 검사 초기화 : 시작 *****/
+	for (unsigned int mc = 0; mc < m_Info.meshCount; mc++)
+	{
+		CollisionDetection collisionDetection;
+		CalculateAABB(collisionDetection, mc);
+		CalculateOBB(collisionDetection, mc);
+
+		collisionDetection.Initilize(pDevice, m_hwnd, m_CollisionType);
+		m_CollisionDetection.push_back(collisionDetection);
+	}
+	/***** 충돌 검사 초기화 : 종료 *****/
+
 	/***** 본 초기화 <뮤텍스> : 잠금 *****/
 	m_InitMutex.lock();
+	m_ModelScaling = modelScaling; // 크기 재설정
 	m_Initilized = true;
 	m_InitMutex.unlock();
 	/***** 본 초기화 <뮤텍스> : 해제 *****/
@@ -1208,6 +1223,16 @@ bool Model::Initialize(ID3D11Device* pDevice, char* pModelFileName, WCHAR* pText
 
 void Model::Shutdown()
 {
+	for (auto iter = m_CollisionDetection.begin(); iter != m_CollisionDetection.end(); iter++)
+	{
+		iter->Shutdown();
+	}
+	m_CollisionDetection.clear();
+
+	m_LocalLightAnimationShader.Shutdown();
+
+	m_LocalLightShader.Shutdown();
+
 	// 모델 텍스쳐를 반환합니다.
 	ReleaseTexture();
 
@@ -1215,7 +1240,7 @@ void Model::Shutdown()
 	ShutdownBuffers();
 }
 
-bool Model::Render(Direct3D* pDirect3D, ID3D11DeviceContext* pDeviceContext, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, XMFLOAT3 cameraPosition, float deltaTime)
+bool Model::Render(Direct3D* pDirect3D, ID3D11DeviceContext* pDeviceContext, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, XMFLOAT3 cameraPosition, float deltaTime, bool lineRenderFlag)
 {
 	// 초기화가 되었을 경우
 	if (m_Initilized)
@@ -1264,18 +1289,7 @@ bool Model::Render(Direct3D* pDirect3D, ID3D11DeviceContext* pDeviceContext, XMM
 			}
 			else // 애니메이션이 있으면
 			{
-				/***** 애니메이션 재생 관리 : 시작 *****/
-				m_SumDeltaTime += deltaTime;
-				if (m_SumDeltaTime > 41.66f) // 1초당 24프레임
-				{
-					m_AnimFrameCount++;
-					if (m_AnimFrameCount >= m_Animations.at(mc).at(m_AnimStackIndex).m_Animation.begin()->second.finalTransform.size())
-					{
-						m_AnimFrameCount = 0;
-					}
-					m_SumDeltaTime = 0.0f;
-				}
-				/***** 애니메이션 재생 관리 : 종료 *****/
+				m_AnimFrameSize = m_Animations.at(mc).at(m_AnimStackIndex).m_Animation.begin()->second.finalTransform.size();
 
 				for (auto iter = m_Animations.at(mc).at(m_AnimStackIndex).m_Animation.begin(); iter != m_Animations.at(mc).at(m_AnimStackIndex).m_Animation.end(); iter++)
 				{
@@ -1291,6 +1305,8 @@ bool Model::Render(Direct3D* pDirect3D, ID3D11DeviceContext* pDeviceContext, XMM
 					return false;
 				}
 			}
+
+			m_CollisionDetection.at(mc).Render(pDeviceContext, worldMatrix, viewMatrix, projectionMatrix, m_CD_Side, m_CD_Up, m_CD_LootAt, m_ModelRotation, lineRenderFlag);
 		}
 	}
 	else // 아직 초기화가 되지 않았을 경우 지연 로딩
@@ -1329,82 +1345,6 @@ bool Model::Render(Direct3D* pDirect3D, ID3D11DeviceContext* pDeviceContext, XMM
 	return true;
 }
 
-void Model::MoveObejctToLookAt(XMFLOAT3 value)
-{
-	m_ModelTranslation.x += value.x * m_LootAt.x;
-	//m_ModelTranslation.y += value.y * m_LootAt.y;
-	m_ModelTranslation.z += value.z * m_LootAt.z;
-}
-void Model::MoveObjectToLookAtUp(XMFLOAT3 value)
-{
-	//m_ModelTranslation.x += value.x * m_Up.x;
-	m_ModelTranslation.y += value.y * m_Up.y;
-	//m_ModelTranslation.z += value.z * m_Up.z;
-}
-void Model::MoveObejctToLookAtSide(XMFLOAT3 value)
-{
-	m_ModelTranslation.x += value.x * m_Side.x;
-	//m_ModelTranslation.y += value.y * m_Side.y;
-	m_ModelTranslation.z += value.z * m_Side.z;
-}
-void Model::RotateObject(XMFLOAT3 value)
-{
-	if (m_ModelRotation.x >= 360.0f)
-		m_ModelRotation.x += -360.0f;
-	if (m_ModelRotation.x <= -360.0f)
-		m_ModelRotation.x += 360.0f;
-
-	if (m_ModelRotation.y >= 360.0f)
-		m_ModelRotation.y += -360.0f;
-	if (m_ModelRotation.y <= -360.0f)
-		m_ModelRotation.y += 360.0f;
-
-	if (m_ModelRotation.z >= 360.0f)
-		m_ModelRotation.z += -360.0f;
-	if (m_ModelRotation.z <= -360.0f)
-		m_ModelRotation.z += 360.0f;
-
-	m_ModelRotation.y += value.y;
-	m_ModelRotation.z += value.z;
-
-
-	// 각도 제한
-	float result = m_ModelRotation.x += value.x;
-
-	if (-m_limitAngle <= result && result <= m_limitAngle)
-		m_ModelRotation.x += value.x;
-	else if (result < -m_limitAngle)
-		m_ModelRotation.x = -m_limitAngle;
-	else if (m_limitAngle < result)
-		m_ModelRotation.x = m_limitAngle;
-}
-void Model::PlayerControl(HID* pHID, float frameTime)
-{
-	int mouseX, mouseY;
-	pHID->GetMouse_Keyboard()->GetDeltaMouse(mouseX, mouseY);
-
-	float moveSpeed = 0.05f * frameTime;
-	float rotateSpeed = 0.05f * frameTime;
-
-	RotateObject(XMFLOAT3(rotateSpeed * mouseY, rotateSpeed * mouseX, 0.0f));
-
-	if (pHID->GetMouse_Keyboard()->IsKeyDown(DIK_W))
-		MoveObejctToLookAt(XMFLOAT3(moveSpeed, moveSpeed, moveSpeed));
-	if (pHID->GetMouse_Keyboard()->IsKeyDown(DIK_S))
-		MoveObejctToLookAt(XMFLOAT3(-moveSpeed, -moveSpeed, -moveSpeed));
-	if (pHID->GetMouse_Keyboard()->IsKeyDown(DIK_A))
-		MoveObejctToLookAtSide(XMFLOAT3(-moveSpeed, -moveSpeed, -moveSpeed));
-	if (pHID->GetMouse_Keyboard()->IsKeyDown(DIK_D))
-		MoveObejctToLookAtSide(XMFLOAT3(moveSpeed, moveSpeed, moveSpeed));
-	if (pHID->GetMouse_Keyboard()->IsKeyDown(DIK_E))
-		MoveObjectToLookAtUp(XMFLOAT3(moveSpeed, moveSpeed, moveSpeed));
-	if (pHID->GetMouse_Keyboard()->IsKeyDown(DIK_Q))
-		MoveObjectToLookAtUp(XMFLOAT3 (-moveSpeed, -moveSpeed, -moveSpeed));
-
-	CalculateWorldMatrix();
-	CalculateCameraPosition();
-}
-
 void Model::SetPosition(XMFLOAT3 position)
 {
 	m_ModelTranslation = position;
@@ -1438,7 +1378,11 @@ XMFLOAT3 Model::GetCameraPosition()
 	return m_cameraPosition;
 }
 
-bool Model::IsActive()
+void Model::SetActive(bool active)
+{
+	m_ActiveFlag = active;
+}
+bool Model::GetActive()
 {
 	return m_ActiveFlag;
 }
@@ -1788,8 +1732,195 @@ XMMATRIX Model::CalculateWorldMatrix()
 	XMMATRIX sM = XMMatrixScaling(m_ModelScaling.x, m_ModelScaling.y, m_ModelScaling.z);
 	vQ = XMQuaternionRotationRollPitchYaw(0.0f, m_ModelRotation.y * XM_RADIAN, 0.0f);
 	rM = XMMatrixRotationQuaternion(vQ);
+
+	/***** 충돌 검사용 방향벡터들 계산 : 시작 *****/
+	XMStoreFloat3(&m_CD_LootAt, XMVector3TransformCoord(XMLoadFloat3(&m_DefaultLootAt), rM));
+	XMStoreFloat3(&m_CD_Up, XMVector3TransformCoord(XMLoadFloat3(&m_DefaultUp), rM));
+	XMStoreFloat3(&m_CD_Side, XMVector3TransformCoord(XMLoadFloat3(&m_DefaultSide), rM));
+	/***** 충돌 검사용 방향벡터들 계산 : 종료 *****/
+
 	XMMATRIX tM = XMMatrixTranslation(m_ModelTranslation.x, m_ModelTranslation.y, m_ModelTranslation.z);
 
 	return sM * rM * tM;
 }
+
+void Model::CalculateAABB(CollisionDetection& rCollisionDetection, unsigned int meshCount)
+{
+
+	XMFLOAT3 min = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	XMFLOAT3 max = XMFLOAT3(0.0f, 0.0f, 0.0f);
+
+	if (!m_HasAnimation.at(meshCount)) // 애니메이션이 없으면
+	{
+		for (auto iter = m_Vertex.at(meshCount).begin(); iter != m_Vertex.at(meshCount).end(); iter++)
+		{
+			if (iter->position.x <= min.x)
+				min.x = iter->position.x;
+
+			if (iter->position.y <= min.y)
+				min.y = iter->position.y;
+
+			if (iter->position.z <= min.z)
+				min.z = iter->position.z;
+
+			if (iter->position.x >= max.x)
+				max.x = iter->position.x;
+
+			if (iter->position.y >= max.y)
+				max.y = iter->position.y;
+
+			if (iter->position.z >= max.z)
+				max.z = iter->position.z;
+		}
+	}
+	else
+	{
+		for (auto iter = m_VertexAnim.at(meshCount).begin(); iter != m_VertexAnim.at(meshCount).end(); iter++)
+		{
+			if (iter->position.x <= min.x)
+				min.x = iter->position.x;
+
+			if (iter->position.y <= min.y)
+				min.y = iter->position.y;
+
+			if (iter->position.z <= min.z)
+				min.z = iter->position.z;
+
+			if (iter->position.x >= max.x)
+				max.x = iter->position.x;
+
+			if (iter->position.y >= max.y)
+				max.y = iter->position.y;
+
+			if (iter->position.z >= max.z)
+				max.z = iter->position.z;
+		}
+	}
+
+	rCollisionDetection.m_InitAABB.m_Min = min;
+	rCollisionDetection.m_InitAABB.m_Max = max;
+}
+
+void Model::CalculateOBB(CollisionDetection& rCollisionDetection, unsigned int meshCount)
+{
+	XMFLOAT3 min = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	XMFLOAT3 max = XMFLOAT3(0.0f, 0.0f, 0.0f);
+
+	if (!m_HasAnimation.at(meshCount)) // 애니메이션이 없으면
+	{
+		for (auto iter = m_Vertex.at(meshCount).begin(); iter != m_Vertex.at(meshCount).end(); iter++)
+		{
+			if (iter->position.x <= min.x)
+				min.x = iter->position.x;
+
+			if (iter->position.y <= min.y)
+				min.y = iter->position.y;
+
+			if (iter->position.z <= min.z)
+				min.z = iter->position.z;
+
+			if (iter->position.x >= max.x)
+				max.x = iter->position.x;
+
+			if (iter->position.y >= max.y)
+				max.y = iter->position.y;
+
+			if (iter->position.z >= max.z)
+				max.z = iter->position.z;
+		}
+	}
+	else
+	{
+		for (auto iter = m_VertexAnim.at(meshCount).begin(); iter != m_VertexAnim.at(meshCount).end(); iter++)
+		{
+			if (iter->position.x <= min.x)
+				min.x = iter->position.x;
+
+			if (iter->position.y <= min.y)
+				min.y = iter->position.y;
+
+			if (iter->position.z <= min.z)
+				min.z = iter->position.z;
+
+			if (iter->position.x >= max.x)
+				max.x = iter->position.x;
+
+			if (iter->position.y >= max.y)
+				max.y = iter->position.y;
+
+			if (iter->position.z >= max.z)
+				max.z = iter->position.z;
+		}
+	}
+
+	XMFLOAT3 center = XMFLOAT3((min.x + max.x) / 2.0f, (min.y + max.y) / 2.0f, (min.z + max.z) / 2.0f);
+	XMFLOAT3 extent = XMFLOAT3(max.x - center.x, max.y - center.y, max.z - center.z);
+
+	rCollisionDetection.m_InitOBB.m_Center = center;
+	rCollisionDetection.m_InitOBB.m_Extent = extent;
+}
+bool Model::Intersection(Model& rOther)
+{
+	bool intersection = false;
+
+	for (int i = 0; i < m_CollisionDetection.size(); i++)
+	{
+		for (int j = 0; j < rOther.m_CollisionDetection.size(); j++)
+		{
+			// AABB AABB 교차 검사
+			if (m_CollisionType == AxisAlignedBoundingBox && rOther.m_CollisionType == AxisAlignedBoundingBox)
+			{
+				if (m_CollisionDetection.at(i).IntersectionAABB(&m_CollisionDetection.at(i).m_AABB, &rOther.m_CollisionDetection.at(j).m_AABB))
+				{
+					m_CollisionDetection.at(i).SetCollisionCheck(true);
+					rOther.m_CollisionDetection.at(j).SetCollisionCheck(true);
+					intersection = true;
+				}
+			}
+			// OBB OBB 교차 검사
+			else if (m_CollisionType == OrientedBoundingBox && rOther.m_CollisionType == OrientedBoundingBox)
+			{
+				if (m_CollisionDetection.at(i).IntersectionOBB(&m_CollisionDetection.at(i).m_OBB, &rOther.m_CollisionDetection.at(j).m_OBB))
+				{
+					m_CollisionDetection.at(i).SetCollisionCheck(true);
+					rOther.m_CollisionDetection.at(j).SetCollisionCheck(true);
+					intersection = true;
+				}
+			}
+			// AABB OBB 교차검사
+			else // m_CollisionType != rOther.m_CollisionType
+			{
+				if (m_CollisionType == AxisAlignedBoundingBox)
+				{
+					if (m_CollisionDetection.at(i).IntersectionAABB_OBB(&m_CollisionDetection.at(i).m_AABB, &rOther.m_CollisionDetection.at(j).m_OBB))
+					{
+						m_CollisionDetection.at(i).SetCollisionCheck(true);
+						rOther.m_CollisionDetection.at(j).SetCollisionCheck(true);
+						intersection = true;
+					}
+				}
+				else
+				{
+					if (m_CollisionDetection.at(i).IntersectionAABB_OBB(&rOther.m_CollisionDetection.at(j).m_AABB, &m_CollisionDetection.at(i).m_OBB))
+					{
+						m_CollisionDetection.at(i).SetCollisionCheck(true);
+						rOther.m_CollisionDetection.at(j).SetCollisionCheck(true);
+						intersection = true;
+					}
+				}
+			}
+		}
+	}
+
+	return intersection;
+}
+
+void Model::InitCollisionCheck()
+{
+	for (int i = 0; i < m_CollisionDetection.size(); i++)
+	{
+		m_CollisionDetection.at(i).SetCollisionCheck(false);
+	}
+}
 /********** 본 초기화 : 종료 **********/
+

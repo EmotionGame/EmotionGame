@@ -161,12 +161,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="CollisionDetection.h" />
+    <ClInclude Include="ColorShader.h" />
     <ClInclude Include="dds.h" />
     <ClInclude Include="DelayLoadingShader.h" />
     <ClInclude Include="DirectXHelpers.h" />
     <ClInclude Include="Event.h" />
     <ClInclude Include="Frustum.h" />
+    <ClInclude Include="Line.h" />
     <ClInclude Include="LoaderHelpers.h" />
+    <ClInclude Include="Monster.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PlatformHelpers.h" />
     <ClInclude Include="Player.h" />
@@ -206,9 +210,13 @@
     <ClInclude Include="WICTextureLoader.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CollisionDetection.cpp" />
+    <ClCompile Include="ColorShader.cpp" />
     <ClCompile Include="DelayLoadingShader.cpp" />
     <ClCompile Include="Event.cpp" />
     <ClCompile Include="Frustum.cpp" />
+    <ClCompile Include="Line.cpp" />
+    <ClCompile Include="Monster.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="QuadTree.cpp" />
     <ClCompile Include="TerrainShader.cpp" />
@@ -289,6 +297,14 @@
       <FileType>Document</FileType>
     </None>
     <None Include="HLSL\DelayLoading_vs.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="HLSL\Color_ps.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="HLSL\Color_vs.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

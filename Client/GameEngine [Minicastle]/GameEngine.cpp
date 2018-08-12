@@ -131,7 +131,7 @@ bool GameEngine::Initialize()
 	}
 
 	// NetworkEngine 객체 초기화
-	if (!m_NetworkEngine->Initialize(m_hwnd, "10.1.8.6", "8090")) // 10.1.8.6 : 10.1.7.107 : 집 172.30.1.20
+	if (!m_NetworkEngine->Initialize(m_hwnd, "172.30.1.20", "8090")) // 10.1.8.6 : 10.1.7.107 : 집 172.30.1.20
 	{
 		MessageBox(m_hwnd, L"GameEngine.cpp : m_NetworkEngine->Initialize", L"Error", MB_OK);
 		return false;

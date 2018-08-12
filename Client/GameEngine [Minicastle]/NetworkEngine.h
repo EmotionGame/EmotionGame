@@ -46,6 +46,22 @@ public:
 	std::mutex& GetSendEPQueueMutex();
 	std::mutex& GetRecvEPQueueMutex();
 
+	std::queue<EventAcquirePacket>* GetSendEAPQueue();
+	std::mutex& GetSendEAPQueueMutex();
+
+	std::queue<MonsterPacket>* GetSendMPQueue();
+	std::queue<MonsterPacket>* GetRecvMPQueue();
+	std::mutex& GetSendMPQueueMutex();
+	std::mutex& GetRecvMPQueueMutex();
+
+	std::queue<MonsterAttackPacket>* GetSendMAPQueue();
+	std::mutex& GetSendMAPQueueMutex();
+
+	std::queue<ObejctPacket>* GetSendOPQueue();
+	std::queue<ObejctPacket>* GetRecvOPQueue();
+	std::mutex& GetSendOPQueueMutex();
+	std::mutex& GetRecvOPQueueMutex();
+
 private:
 	HWND m_hwnd;
 
@@ -90,6 +106,22 @@ private:
 	std::queue<EventPacket>* m_RecvEventPacketQueue;
 	std::mutex m_SendEPQueueMutex;
 	std::mutex m_RecvEPQueueMutex;
+
+	std::queue<EventAcquirePacket>* m_SendEventAcquirePacketQueue;
+	std::mutex m_SendEAPQueueMutex;
+
+	std::queue<MonsterPacket>* m_SendMonsterPacketQueue;
+	std::queue<MonsterPacket>* m_RecvMonsterPacketQueue;
+	std::mutex m_SendMPQueueMutex;
+	std::mutex m_RecvMPQueueMutex;
+
+	std::queue<MonsterAttackPacket>* m_SendMonsterAttackPacketQueue;
+	std::mutex m_SendMAPQueueMutex;
+
+	std::queue<ObejctPacket>* m_SendObjectPacketQueue;
+	std::queue<ObejctPacket>* m_RecvObjectPacketQueue;
+	std::mutex m_SendOPQueueMutex;
+	std::mutex m_RecvOPQueueMutex;
 };
 
 /*

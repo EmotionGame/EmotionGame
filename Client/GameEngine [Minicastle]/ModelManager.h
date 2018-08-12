@@ -7,6 +7,7 @@ class HID;
 class Model;
 class Player;
 class Event;
+class Monster;
 class QuadTree;
 
 class ModelManager : public AlignedAllocationPolicy<16>
@@ -31,7 +32,16 @@ private:
 	bool RecvUserPacket31Physics(HID* pHID, NetworkEngine* pNetworkEngine, Camera* pCamera, QuadTree* pQuadTree, float deltaTime);
 	bool RecvActionPacketPhysics(HID* pHID, NetworkEngine* pNetworkEngine, Camera* pCamera, QuadTree* pQuadTree, float deltaTime);
 	bool PlayerActionPhysics(HID* pHID, NetworkEngine* pNetworkEngine, Camera* pCamera, QuadTree* pQuadTree, float deltaTime);
-	bool CreateEventPhysics(HID* pHID, NetworkEngine* pNetworkEngine, Camera* pCamera, QuadTree* pQuadTree, float deltaTime);
+	
+	bool EventPhysics(HID* pHID, NetworkEngine* pNetworkEngine, Camera* pCamera, QuadTree* pQuadTree, float deltaTime);
+	bool RecvEventPacketPhysics(HID* pHID, NetworkEngine* pNetworkEngine, Camera* pCamera, QuadTree* pQuadTree, float deltaTime);
+	bool SendEventPacketPhysics(HID* pHID, NetworkEngine* pNetworkEngine, Camera* pCamera, QuadTree* pQuadTree, float deltaTime);
+
+	bool MonsterPhysics(HID* pHID, NetworkEngine* pNetworkEngine, Camera* pCamera, QuadTree* pQuadTree, float deltaTime);
+	bool RecvMonsterPacketPhysics(HID* pHID, NetworkEngine* pNetworkEngine, Camera* pCamera, QuadTree* pQuadTree, float deltaTime);
+	bool SendMonsterPacketPhysics(HID* pHID, NetworkEngine* pNetworkEngine, Camera* pCamera, QuadTree* pQuadTree, float deltaTime);
+
+	bool CollisionDetection(HID* pHID, NetworkEngine* pNetworkEngine, Camera* pCamera, QuadTree* pQuadTree, float deltaTime);
 
 	unsigned int static __stdcall InitPlayerModelThread(void* p);
 	UINT WINAPI _InitPlayerModelThread();
@@ -40,6 +50,9 @@ private:
 
 	unsigned int static __stdcall InitEventModelThread(void* p);
 	UINT WINAPI _InitEventModelThread();
+
+	unsigned int static __stdcall InitMonsterModelThread(void* p);
+	UINT WINAPI _InitMonsterModelThread();
 
 private:
 	ID3D11Device* m_device = nullptr; // 포인터를 받아와서 사용하므로 m_device->Shutdown() 금지
@@ -66,21 +79,25 @@ private:
 	XMFLOAT3 m_PlayerPresentRot = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 	bool m_DetectChanging[PLAYER_SIZE];
+	clock_t m_PlayerActionInit = 0;
+	clock_t m_PlayerActionCheck = 0;
 
 #define EVENT_SIZE 7
 	unsigned int m_InitEventCount = 0;
 	std::mutex m_InitEventCountMutex; // m_InitEventCount 뮤텍스
 	std::unordered_map<unsigned int, Event*>* m_EventUMap = nullptr;
 	std::mutex m_EventUMapMutex; // m_EventUMap 뮤텍스
-	// m_AllModelUMap의 각 "Event"가 초기화되었는지 확인하는 플래그
-	bool m_EventInitilized[EVENT_SIZE] = { false, false, false, false, false, false, false };
-	std::mutex m_EventInitilizedMutex[EVENT_SIZE]; // m_PlayerInitilized 뮤텍스
+	clock_t m_FixedEventInit = 0;
+	clock_t m_FixedEventCheck = 0;
+
+#define MONSTER_SIZE 1
+	Monster* m_Monster = nullptr;
+	std::mutex m_MonsterMutex;
+	clock_t m_MonsterInit = 0;
+	clock_t m_MonsterCheck = 0;
 
 #define OBJECT_SIZE 6
 
 
-
-#define MONSTER_SIZE 1
-
-
+	bool m_LineRenderFlag = false;
 };

@@ -178,7 +178,7 @@ bool RenderingEngine::Initialize(HWND hwnd, int screenWidth, int screenHeight)
 		return false;
 	}
 
-	if (!m_Terrain->Initialize(m_Direct3D->GetDevice(), "Data/Terrain/heightmap01.bmp", L"Data/Terrain/dirt01.dds"))
+	if (!m_Terrain->Initialize(m_Direct3D->GetDevice(), "Data/Terrain/heightmap03.bmp", L"Data/Terrain/dirt01.dds"))
 	{
 		MessageBox(m_hwnd, L"RenderingEngine.cpp : m_Terrain->Initialize", L"Error", MB_OK);
 		return false;
@@ -299,7 +299,7 @@ bool RenderingEngine::Frame(HID* pHID, int cputPercentage, float deltaTime)
 		return false;
 	}
 
-	if (!m_TextManager->Frame(m_Direct3D->GetDeviceContext(), cputPercentage, m_FPS->GetFps(), deltaTime, m_averageDeltaTime, m_ModelManager->GetPlayerID(), m_QuadTree->GetDrawCount()))
+	if (!m_TextManager->Frame(m_Direct3D->GetDeviceContext(), pHID, cputPercentage, m_FPS->GetFps(), deltaTime, m_averageDeltaTime, m_ModelManager->GetPlayerID(), m_QuadTree->GetDrawCount()))
 	{
 		MessageBox(m_hwnd, L"RenderingEngine.cpp : m_TextManager->Frame(m_Direct3D->GetDeviceContext(), cputPercentage, fps, deltaTime, averageDeltaTime)", L"Error", MB_OK);
 		return false;

@@ -32,6 +32,7 @@ bool NetworkEngine::Initialize(HWND hwnd, char* pIP, char* pPort)
 		MessageBox(m_hwnd, L"NetworkEngine.cpp : m_RecvActionPacketQueue", L"Error", MB_OK);
 		return false;
 	}
+
 	m_SendUserPacket31Queue = new std::queue<UserPacket>;
 	if (!m_SendUserPacket31Queue)
 	{
@@ -44,6 +45,7 @@ bool NetworkEngine::Initialize(HWND hwnd, char* pIP, char* pPort)
 		MessageBox(m_hwnd, L"NetworkEngine.cpp : m_RecvActionPacketQueue", L"Error", MB_OK);
 		return false;
 	}
+
 	m_SendActionPacketQueue = new std::queue<ActionPacket>;
 	if (!m_SendActionPacketQueue)
 	{
@@ -56,6 +58,7 @@ bool NetworkEngine::Initialize(HWND hwnd, char* pIP, char* pPort)
 		MessageBox(m_hwnd, L"NetworkEngine.cpp : m_RecvActionPacketQueue", L"Error", MB_OK);
 		return false;
 	}
+
 	m_SendEventPacketQueue = new std::queue<EventPacket>;
 	if (!m_SendEventPacketQueue)
 	{
@@ -69,18 +72,86 @@ bool NetworkEngine::Initialize(HWND hwnd, char* pIP, char* pPort)
 		return false;
 	}
 
-	/**** 서버와 연결하지 않았을 때 테스트용 : 시작 *****/
-	UserPacket test;
-	for (int i = 0; i < 8; i++)
+	m_SendEventAcquirePacketQueue = new std::queue<EventAcquirePacket>;
+	if (!m_SendEventAcquirePacketQueue)
 	{
-		test.id = i;
-		int x = i % 100;
-		int z = i / 100;
-		test.position[0] = 1.0f * x;
-		test.position[2] = -1.0f * z;
-		m_RecvUserPacket30Queue->push(test);
-
+		MessageBox(m_hwnd, L"NetworkEngine.cpp : m_SendEventAcquirePacketQueue", L"Error", MB_OK);
+		return false;
 	}
+
+	m_SendMonsterPacketQueue = new std::queue<MonsterPacket>;
+	if (!m_SendMonsterPacketQueue)
+	{
+		MessageBox(m_hwnd, L"NetworkEngine.cpp : m_SendMonsterPacketQueue", L"Error", MB_OK);
+		return false;
+	}
+	m_RecvMonsterPacketQueue = new std::queue<MonsterPacket>;
+	if (!m_RecvMonsterPacketQueue)
+	{
+		MessageBox(m_hwnd, L"NetworkEngine.cpp : m_RecvMonsterPacketQueue", L"Error", MB_OK);
+		return false;
+	}
+
+	m_SendMonsterAttackPacketQueue = new std::queue<MonsterAttackPacket>;
+	if (!m_SendMonsterAttackPacketQueue)
+	{
+		MessageBox(m_hwnd, L"NetworkEngine.cpp : m_SendMonsterPacketQueue", L"Error", MB_OK);
+		return false;
+	}
+
+	m_SendObjectPacketQueue = new std::queue<ObejctPacket>;
+	if (!m_SendObjectPacketQueue)
+	{
+		MessageBox(m_hwnd, L"NetworkEngine.cpp : m_SendObjectPacketQueue", L"Error", MB_OK);
+		return false;
+	}
+	m_RecvObjectPacketQueue = new std::queue<ObejctPacket>;
+	if (!m_RecvObjectPacketQueue)
+	{
+		MessageBox(m_hwnd, L"NetworkEngine.cpp : m_RecvObjectPacketQueue", L"Error", MB_OK);
+		return false;
+	}
+
+	/**** 서버와 연결하지 않았을 때 테스트용 : 시작 *****/
+	UserPacket UPtest;
+	for (int i = 0; i < 4; i++)
+	{
+		UPtest.id = i;
+		int x = 16 * (i % 100) + 104;
+		int z = 5 * (i / 100) + 80;
+		UPtest.position[0] = 1.0f * x;
+		UPtest.position[1] = 5.0f;
+		UPtest.position[2] = 1.0f * z;
+		m_RecvUserPacket30Queue->push(UPtest);
+	}
+	for (int i = 0; i < 4; i++)
+	{
+		UPtest.id = i + 4;
+		int x = 16 * (i % 100) + 104;
+		int z = 5 * (i / 100) + 176;
+		UPtest.position[0] = 1.0f * x;
+		UPtest.position[1] = 5.0f;
+		UPtest.position[2] = 1.0f * z;
+		UPtest.rotation[1] = 180.0f;
+		m_RecvUserPacket30Queue->push(UPtest);
+	}
+
+	EventPacket EPtest;
+	for (int i = 1; i <= 8; i++)
+	{
+		if (i != 5)
+		{
+			EPtest.id = i;
+			int x = 16 * (i % 100) + 72;
+			int z = 5 * (i / 100) + 128;
+			EPtest.position[0] = 1.0f * x;
+			EPtest.position[1] = 5.0f;
+			EPtest.position[2] = 1.0f * z;
+			EPtest.state = true;
+			m_RecvEventPacketQueue->push(EPtest);
+		}
+	}
+
 	m_ConnectFlag = true;
 	/**** 서버와 연결하지 않았을 때 테스트용 : 종료 *****/
 
@@ -205,53 +276,12 @@ UINT WINAPI NetworkEngine::_SendThread()
 {
 	while (1)
 	{
-		UserPacket tempUP;
 		ActionPacket tempAP;
 		EventPacket tempEP;
-
-
-		/***** UserPacket : 시작 *****/
-		/***** m_SendUP31QueueMutex : 시작 *****/
-		m_SendUP31QueueMutex.lock();
-		if (!m_SendUserPacket31Queue->empty())
-		{
-			tempUP = m_SendUserPacket31Queue->front();
-			m_SendUserPacket31Queue->pop();
-			m_SendUP31QueueMutex.unlock();
-			/***** m_SendUP31QueueMutex : 종료 *****/
-#ifdef _DEBUG
-			printf("Pop >> NetworkEngine.cpp : UserPacket31 -> type = %d, id = %d, position = {%f %f %f}, rotation = {%f %f %f}\n",
-				tempUP.type,
-				tempUP.id,
-				tempUP.position[0],
-				tempUP.position[1],
-				tempUP.position[2],
-				tempUP.rotation[0],
-				tempUP.rotation[1],
-				tempUP.rotation[2]
-			);
-#endif
-			m_SendBuff.len = sizeof(UserPacket);
-			m_SendBuff.buf = (char*)&tempUP;
-
-			if (WSASend(m_hSocket, &m_SendBuff, 1, (LPDWORD)&m_SendBytes, 0, &m_Overlapped, NULL) == SOCKET_ERROR)
-			{
-#ifdef _DEBUG
-				printf("Fail >> NetworkEngine.cpp : UserPacket31 -> WSASend\n");
-#endif
-				continue;
-			}
-#ifdef _DEBUG
-			printf("Success >> NetworkEngine.cpp : UserPacket31 -> WSASend\n");
-#endif
-
-			/***** m_SendUP31QueueMutex : 시작 *****/
-			m_SendUP31QueueMutex.lock();
-		}
-		m_SendUP31QueueMutex.unlock();
-		/***** m_SendUP31QueueMutex : 종료 *****/
-		/***** UserPacket : 종료 *****/
-
+		EventAcquirePacket tempEAP;
+		UserPacket tempUP;
+		MonsterPacket tempMP;
+		MonsterAttackPacket tempMAP;
 
 		/***** ActionPacket : 시작 *****/
 		/***** m_SendAPQueueMutex : 시작 *****/
@@ -334,6 +364,167 @@ UINT WINAPI NetworkEngine::_SendThread()
 		m_SendEPQueueMutex.unlock();
 		/***** m_SendEPQueueMutex : 종료 *****/
 		/***** EventPacket : 종료 *****/
+
+
+		/***** EventAcquirePacket : 시작 *****/
+		/***** m_SendEAPQueueMutex : 시작 *****/
+		m_SendEAPQueueMutex.lock();
+		if (!m_SendEventAcquirePacketQueue->empty())
+		{
+			tempEAP = m_SendEventAcquirePacketQueue->front();
+			m_SendEventAcquirePacketQueue->pop();
+			m_SendEAPQueueMutex.unlock();
+			/***** m_SendEAPQueueMutex : 종료 *****/
+#ifdef _DEBUG
+			printf("Pop >> NetworkEngine.cpp : EventAcquirePacket -> type = %d, eventId = %d, playerId = %d, position = (%f %f %f)\n",
+				tempEAP.type,
+				tempEAP.eventId,
+				tempEAP.playerId,
+				tempEAP.position[0],
+				tempEAP.position[1],
+				tempEAP.position[2]
+			);
+#endif
+			m_SendBuff.len = sizeof(EventAcquirePacket);
+			m_SendBuff.buf = (char*)&tempEAP;
+
+			if (WSASend(m_hSocket, &m_SendBuff, 1, (LPDWORD)&m_SendBytes, 0, &m_Overlapped, NULL) == SOCKET_ERROR)
+			{
+#ifdef _DEBUG
+				printf("Fail >> NetworkEngine.cpp : EventAcquirePacket -> WSASend\n");
+#endif
+				continue;
+			}
+#ifdef _DEBUG
+			printf("Success >> NetworkEngine.cpp : EventAcquirePacket -> WSASend\n");
+#endif
+			/***** m_SendEAPQueueMutex : 시작 *****/
+			m_SendEAPQueueMutex.lock();
+		}
+		m_SendEAPQueueMutex.unlock();
+		/***** m_SendEAPQueueMutex : 종료 *****/
+		/***** EventAcquirePacket : 종료 *****/
+		
+
+		/***** UserPacket : 시작 *****/
+		/***** m_SendUP31QueueMutex : 시작 *****/
+		m_SendUP31QueueMutex.lock();
+		if (!m_SendUserPacket31Queue->empty())
+		{
+			tempUP = m_SendUserPacket31Queue->front();
+			m_SendUserPacket31Queue->pop();
+			m_SendUP31QueueMutex.unlock();
+			/***** m_SendUP31QueueMutex : 종료 *****/
+#ifdef _DEBUG
+			printf("Pop >> NetworkEngine.cpp : UserPacket31 -> type = %d, id = %d, position = {%f %f %f}, rotation = {%f %f %f}\n",
+				tempUP.type,
+				tempUP.id,
+				tempUP.position[0],
+				tempUP.position[1],
+				tempUP.position[2],
+				tempUP.rotation[0],
+				tempUP.rotation[1],
+				tempUP.rotation[2]
+			);
+#endif
+			m_SendBuff.len = sizeof(UserPacket);
+			m_SendBuff.buf = (char*)&tempUP;
+
+			if (WSASend(m_hSocket, &m_SendBuff, 1, (LPDWORD)&m_SendBytes, 0, &m_Overlapped, NULL) == SOCKET_ERROR)
+			{
+#ifdef _DEBUG
+				printf("Fail >> NetworkEngine.cpp : UserPacket31 -> WSASend\n");
+#endif
+				continue;
+			}
+#ifdef _DEBUG
+			printf("Success >> NetworkEngine.cpp : UserPacket31 -> WSASend\n");
+#endif
+
+			/***** m_SendUP31QueueMutex : 시작 *****/
+			m_SendUP31QueueMutex.lock();
+		}
+		m_SendUP31QueueMutex.unlock();
+		/***** m_SendUP31QueueMutex : 종료 *****/
+		/***** UserPacket : 종료 *****/
+
+
+		/***** MonsterPacket : 시작 *****/
+		/***** m_SendMPQueueMutex : 시작 *****/
+		m_SendMPQueueMutex.lock();
+		if (!m_SendMonsterPacketQueue->empty())
+		{
+			tempMP = m_SendMonsterPacketQueue->front();
+			m_SendMonsterPacketQueue->pop();
+			m_SendMPQueueMutex.unlock();
+			/***** m_SendMPQueueMutex : 종료 *****/
+#ifdef _DEBUG
+			printf("Pop >> NetworkEngine.cpp : MonsterPacket -> type = %d, position = {%f %f %f}\n",
+				tempMP.type,
+				tempMP.position[0],
+				tempMP.position[1],
+				tempMP.position[2]
+			);
+#endif
+			m_SendBuff.len = sizeof(MonsterPacket);
+			m_SendBuff.buf = (char*)&tempMP;
+
+			if (WSASend(m_hSocket, &m_SendBuff, 1, (LPDWORD)&m_SendBytes, 0, &m_Overlapped, NULL) == SOCKET_ERROR)
+			{
+#ifdef _DEBUG
+				printf("Fail >> NetworkEngine.cpp : MonsterPacket -> WSASend\n");
+#endif
+				continue;
+			}
+#ifdef _DEBUG
+			printf("Success >> NetworkEngine.cpp : MonsterPacket -> WSASend\n");
+#endif
+			/***** m_SendMPQueueMutex : 시작 *****/
+			m_SendMPQueueMutex.lock();
+		}
+		m_SendMPQueueMutex.unlock();
+		/***** m_SendMPQueueMutex : 종료 *****/
+		/***** MonsterPacket : 종료 *****/
+
+
+		/***** MonsterAttackPacket : 시작 *****/
+		/***** m_SendMAPQueueMutex : 시작 *****/
+		m_SendMAPQueueMutex.lock();
+		if (!m_SendMonsterAttackPacketQueue->empty())
+		{
+			tempMAP = m_SendMonsterAttackPacketQueue->front();
+			m_SendMonsterAttackPacketQueue->pop();
+			m_SendMAPQueueMutex.unlock();
+			/***** m_SendMAPQueueMutex : 종료 *****/
+#ifdef _DEBUG
+			printf("Pop >> NetworkEngine.cpp : MonsterAttackPacket -> type = %d, playerId = %d, position = {%f %f %f}, collision = %s\n",
+				tempMAP.type,
+				tempMAP.playerId,
+				tempMAP.position[0],
+				tempMAP.position[1],
+				tempMAP.position[2],
+				tempMAP.collision ? "true" : "false"
+			);
+#endif
+			m_SendBuff.len = sizeof(MonsterAttackPacket);
+			m_SendBuff.buf = (char*)&tempMAP;
+
+			if (WSASend(m_hSocket, &m_SendBuff, 1, (LPDWORD)&m_SendBytes, 0, &m_Overlapped, NULL) == SOCKET_ERROR)
+			{
+#ifdef _DEBUG
+				printf("Fail >> NetworkEngine.cpp : MonsterAttackPacket -> WSASend\n");
+#endif
+				continue;
+			}
+#ifdef _DEBUG
+			printf("Success >> NetworkEngine.cpp : MonsterAttackPacket -> WSASend\n");
+#endif
+			/***** m_SendMAPQueueMutex : 시작 *****/
+			m_SendMAPQueueMutex.lock();
+		}
+		m_SendMAPQueueMutex.unlock();
+		/***** m_SendMAPQueueMutex : 종료 *****/
+		/***** MonsterAttackPacket : 종료 *****/
 	}
 
 	_endthreadex(0);
@@ -352,12 +543,16 @@ UINT WINAPI NetworkEngine::_RecvThread()
 	UserPacket* tempUP;
 	ActionPacket* tempAP;
 	EventPacket* tempEP;
+	MonsterPacket* tempMP;
+	ObejctPacket* tempOP;
 
 	while (1)
 	{
 		tempUP = nullptr;
 		tempAP = nullptr;
 		tempEP = nullptr;
+		tempMP = nullptr;
+		tempOP = nullptr;
 
 		DWORD recvByte = 0;
 		DWORD offset = 0;
@@ -376,7 +571,6 @@ UINT WINAPI NetworkEngine::_RecvThread()
 		while (recvByte - offset > 0)
 		{
 			int* type = reinterpret_cast<int*>(buffer + offset);
-
 
 			switch (*type)
 			{
@@ -409,7 +603,6 @@ UINT WINAPI NetworkEngine::_RecvThread()
 					m_RecvAPQueueMutex.lock();
 #endif
 				}
-
 				m_RecvAPQueueMutex.unlock();
 				/***** m_RecvAPQueueMutex : 종료 *****/
 
@@ -476,7 +669,6 @@ UINT WINAPI NetworkEngine::_RecvThread()
 					m_RecvUP30QueueMutex.lock();
 #endif
 				}
-
 				m_RecvUP30QueueMutex.unlock();
 				/***** m_RecvUPQueueMutex : 종료 *****/
 				offset += sizeof(UserPacket);
@@ -510,12 +702,75 @@ UINT WINAPI NetworkEngine::_RecvThread()
 					m_RecvUP31QueueMutex.lock();
 #endif
 				}
-
 				m_RecvUP31QueueMutex.unlock();
 				/***** m_RecvUPQueueMutex : 종료 *****/
 
 				offset += sizeof(UserPacket);
 				break;
+
+			case 50: // MonsterPacket
+				tempMP = reinterpret_cast<MonsterPacket*>(buffer + offset);
+
+				/***** m_RecvMPQueueMutex : 시작 *****/
+				m_RecvMPQueueMutex.lock();
+
+				if (m_RecvMonsterPacketQueue->size() < QUEUE_LIMIT_SIZE)
+				{
+					m_RecvMonsterPacketQueue->push(*tempMP);
+#ifdef _DEBUG
+					m_RecvMPQueueMutex.unlock();
+					/***** m_RecvMPQueueMutex : 종료 *****/
+
+					printf("Pop >> NetworkEngine.cpp : MonsterPacket -> type = %d, position = {%f %f %f}, rotation = {%f %f %f}\n",
+						tempMP->type,
+						tempMP->position[0],
+						tempMP->position[1],
+						tempMP->position[2],
+						tempMP->rotation[0],
+						tempMP->rotation[1],
+						tempMP->rotation[2]
+					);
+
+					/***** m_RecvMPQueueMutex : 시작 *****/
+					m_RecvMPQueueMutex.lock();
+#endif
+				}
+				m_RecvMPQueueMutex.unlock();
+				/***** m_RecvMPQueueMutex : 종료 *****/
+
+				offset += sizeof(MonsterPacket);
+				break;
+
+//			case 70:
+//				tempOP = reinterpret_cast<ObejctPacket*>(buffer + offset);
+//
+//				/***** m_RecvOPQueueMutex : 시작 *****/
+//				m_RecvOPQueueMutex.lock();
+//
+//				if (m_RecvObjectPacketQueue->size() < QUEUE_LIMIT_SIZE)
+//				{
+//					m_RecvObjectPacketQueue->push(*tempOP);
+//#ifdef _DEBUG
+//					m_RecvOPQueueMutex.unlock();
+//					/***** m_RecvOPQueueMutex : 종료 *****/
+//
+//					printf("Pop >> NetworkEngine.cpp : ObejctPacket -> type = %d, id = %d, position = {%f %f %f}\n",
+//						tempOP->type,
+//						tempOP->id,
+//						tempOP->position[0],
+//						tempOP->position[1],
+//						tempOP->position[2]
+//					);
+//
+//					/***** m_RecvOPQueueMutex : 시작 *****/
+//					m_RecvOPQueueMutex.lock();
+//#endif
+//				}
+//				m_RecvOPQueueMutex.unlock();
+//				/***** m_RecvOPQueueMutex : 종료 *****/
+//
+//				offset += sizeof(ObejctPacket);
+//				break;
 			}
 		}
 	}
@@ -594,4 +849,56 @@ std::mutex& NetworkEngine::GetSendEPQueueMutex()
 std::mutex& NetworkEngine::GetRecvEPQueueMutex()
 {
 	return m_RecvEPQueueMutex;
+}
+
+std::queue<EventAcquirePacket>* NetworkEngine::GetSendEAPQueue()
+{
+	return m_SendEventAcquirePacketQueue;
+}
+std::mutex& NetworkEngine::GetSendEAPQueueMutex()
+{
+	return m_SendEAPQueueMutex;
+}
+
+std::queue<MonsterPacket>* NetworkEngine::GetSendMPQueue()
+{
+	return m_SendMonsterPacketQueue;
+}
+std::queue<MonsterPacket>* NetworkEngine::GetRecvMPQueue()
+{
+	return m_RecvMonsterPacketQueue;
+}
+std::mutex& NetworkEngine::GetSendMPQueueMutex()
+{
+	return m_SendMPQueueMutex;
+}
+std::mutex& NetworkEngine::GetRecvMPQueueMutex()
+{
+	return m_RecvMPQueueMutex;
+}
+
+std::queue<MonsterAttackPacket>* NetworkEngine::GetSendMAPQueue()
+{
+	return m_SendMonsterAttackPacketQueue;
+}
+std::mutex& NetworkEngine::GetSendMAPQueueMutex()
+{
+	return m_SendMAPQueueMutex;
+}
+
+std::queue<ObejctPacket>* NetworkEngine::GetSendOPQueue()
+{
+	return m_SendObjectPacketQueue;
+}
+std::queue<ObejctPacket>* NetworkEngine::GetRecvOPQueue()
+{
+	return m_RecvObjectPacketQueue;
+}
+std::mutex& NetworkEngine::GetSendOPQueueMutex()
+{
+	return m_SendOPQueueMutex;
+}
+std::mutex& NetworkEngine::GetRecvOPQueueMutex()
+{
+	return m_RecvOPQueueMutex;
 }

@@ -3,6 +3,7 @@
 #include "LocalLightShader.h"
 #include "LocalLightAnimationShader.h"
 #include "Texture.h"
+#include "CollisionDetection.h"
 
 class HID;
 class Direct3D;
@@ -91,13 +92,14 @@ private:
 
 public:
 	Model(const Model& rOther);
-	bool DelayLoadingInitialize(ID3D11Device* pDevice, HWND hwnd, WCHAR* pTextureFileName, XMFLOAT3 modelScaling, XMFLOAT3 modelRotation, XMFLOAT3 modelTranslation);
+	bool DelayLoadingInitialize(ID3D11Device* pDevice, HWND hwnd, WCHAR* pTextureFileName, 
+		XMFLOAT3 modelScaling, XMFLOAT3 modelRotation, XMFLOAT3 modelTranslation, int collisionType);
 	bool DelayLoadingBuffers(ID3D11Device* pDevice);
 	void DelayLoadingRenderBuffers(ID3D11DeviceContext* pDeviceContext);
 
 	bool IsDelayLoadingInitilized();
 
-private:
+protected:
 	HWND m_hwnd;
 
 	XMFLOAT3 m_ModelScaling = XMFLOAT3(1.0f, 1.0f, 1.0f);
@@ -116,6 +118,8 @@ private:
 
 	Texture m_DelayLoadingTexture;
 
+	int m_CollisionType = AxisAlignedBoundingBox;
+
 /********** 지연 로딩 : 종료 **********/
 
 
@@ -127,13 +131,7 @@ public:
 
 	bool Initialize(ID3D11Device* pDevice, char* pModelFileName, WCHAR* pTextureFileName, XMFLOAT3 modelScaling, bool specularZero, unsigned int animStackNum);
 	void Shutdown();
-	bool Render(Direct3D* pDirect3D, ID3D11DeviceContext* pDeviceContext, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, XMFLOAT3 cameraPosition, float deltaTime);
-
-	void MoveObejctToLookAt(XMFLOAT3 value);
-	void MoveObjectToLookAtUp(XMFLOAT3 value);
-	void MoveObejctToLookAtSide(XMFLOAT3 value);
-	void RotateObject(XMFLOAT3 value);
-	void PlayerControl(HID* pHID, float frameTime);
+	bool Render(Direct3D* pDirect3D, ID3D11DeviceContext* pDeviceContext, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, XMFLOAT3 cameraPosition, float deltaTime, bool lineRenderFlag);
 
 	void SetPosition(XMFLOAT3 position);
 	XMFLOAT3 GetPosition();
@@ -142,10 +140,14 @@ public:
 	void CalculateCameraPosition();
 	XMFLOAT3 GetCameraPosition();
 
-	bool IsActive();
+	void SetActive(bool active);
+	bool GetActive();
 	bool IsInitilized();
 
-private:
+	bool Intersection(Model& rOther);
+	void InitCollisionCheck();
+
+protected:
 	bool LoadModel(char* pFileName);
 	bool InitializeBuffers(ID3D11Device* pDevice, unsigned int meshCount);
 	bool InitializeAnimationBuffers(ID3D11Device* pDevice, unsigned int meshCount);
@@ -160,7 +162,10 @@ private:
 
 	XMMATRIX CalculateWorldMatrix();
 
-private:
+	void CalculateAABB(CollisionDetection& rCollisionDetection, unsigned int meshCount);
+	void CalculateOBB(CollisionDetection& rCollisionDetection, unsigned int meshCount);
+
+protected:
 	bool m_ActiveFlag = true;
 
 	std::unordered_map<unsigned int, ID3D11Buffer*> m_VertexBufferUMap;
@@ -180,9 +185,13 @@ private:
 	XMFLOAT3 m_Up = XMFLOAT3(0.0f, 1.0f, 0.0f);
 	XMFLOAT3 m_Side = XMFLOAT3(1.0f, 0.0f, 0.0f);
 
+	XMFLOAT3 m_CD_LootAt = XMFLOAT3(0.0f, 0.0f, 1.0f);
+	XMFLOAT3 m_CD_Up = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	XMFLOAT3 m_CD_Side = XMFLOAT3(1.0f, 0.0f, 0.0f);
+
 	XMFLOAT3 m_cameraPosition = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
-	float m_limitAngle = 60.0f;
+	float m_limitAngle = 45.0f;
 	/***** 모델 제어 : 종료 *****/
 
 	LocalLightShader m_LocalLightShader;
@@ -217,6 +226,7 @@ private:
 	/***** KSM에서 로드한 데이터들 : 종료 *****/
 
 	/***** Animation 관리 : 시작 *****/
+	unsigned int m_AnimFrameSize = 0;
 	unsigned int m_AnimStackIndex = 0;
 	unsigned int m_AnimFrameCount = 0;
 	float m_SumDeltaTime = 0.0f;
@@ -235,5 +245,6 @@ private:
 	std::mutex m_InitMutex;
 	bool m_Initilized = false;
 
+	std::vector<CollisionDetection> m_CollisionDetection;
 /********** 본 초기화 : 종료 **********/
 };
