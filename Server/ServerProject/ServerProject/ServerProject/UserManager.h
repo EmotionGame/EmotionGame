@@ -39,6 +39,8 @@ public:
 	bool setJob(int index, char* data);
 	char* getJob(int index);
 
+	void effect(int index);
+
 	bool alive(int index);
 
 	int size();
