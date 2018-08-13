@@ -19,7 +19,7 @@ public:
 	~MonsterManager();
 
 	char* getMonsterInfo();
-	void injectEmo(int emotion[4]);
+	void setEmotion(int emotion[4]);
 	// 최대 감정 return
 	int getEmotion();
 	int getDmg();
@@ -35,6 +35,7 @@ public:
 private:
 	void setEmostate(int type);
 	void setDirection(int userIndex, float distance);
+	void setMonsterState(int emo, int new_emo);
 
 	Monster _monster;
 	tbb::concurrent_queue<char*> monsterQueue_;

@@ -3,21 +3,12 @@
 
 Object::Object()
 {
-	for (int i = 0; i < 2; i++) {
+	for (int i = 0; i < 4; i++) {
 		ObjectPacket object;
-		// id = 1, 울타리
-		object.id = 1;
+		object.id = i;
 		object.position[0] = randomValue();
-		object.position[1] = randomValue();
-		objects.push_back(object);
-	}
-	for (int i = 0; i < 2; i++) {
-		ObjectPacket object;
-		// id = 2, 움막
-		object.id = 2;
-		object.position[0] = randomValue();
-		object.position[1] = randomValue();
-		objects.push_back(object);
+		object.position[2] = randomValue();
+		objects.push_back(make_pair(i/2+1, object));
 	}
 }
 
@@ -26,20 +17,26 @@ Object::~Object()
 	objects.clear();
 }
 
+void Object::start()
+{
+	for (int i = 0; i < objects.size(); i++)
+		objects[i].second.state = true;
+}
+
 void Object::injectEmo(int index, int emotion[4])
 {
 	lock_guard<mutex>lock(_lock);
 	for (int i = 0; i < 4; i++)
-		objects[index].emotion[i] += emotion[i];
+		objects[index].second.emotion[i] += emotion[i];
 }
 
 void Object::damaged(int index, int dmg)
 {
 	lock_guard<mutex>lock(_lock);
-	objects[index].hp -= dmg;
+	objects[index].second.hp -= dmg;
 
-	if (objects[index].hp <= 0)
-		objects[index].state = false;
+	if (objects[index].second.hp <= 0)
+		objects[index].second.state = false;
 }
 
 void Object::update()
@@ -47,8 +44,8 @@ void Object::update()
 	lock_guard<mutex>lock(_lock);
 	for (int i = 0; i < objects.size(); i++) {
 		for (int ei = 0; ei < 4; ei++) {
-			if (objects[i].emotion[ei] > 0)
-				objects[i].emotion[ei] -= 1;
+			if (objects[i].second.emotion[ei] > 0)
+				objects[i].second.emotion[ei] -= 1;
 		}
 	}
 }

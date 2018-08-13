@@ -76,8 +76,8 @@ typedef struct {
 	int id;
 	int hp = 40;
 	int emotion[4] = { 0,0,0,0 };
-	float position[3];
-	bool state = true;
+	float position[3] = { 0,0,0 };
+	bool state = false;
 }ObjectPacket;
 
 typedef struct {
@@ -86,6 +86,7 @@ typedef struct {
 	int emotion[4] = { 0,0,0,0 };
 	float position[3] = { 128,128,128 };
 	float rotation[3] = { 0, 0, 0 };
+	float scale[3] = { 0.0f, 0.0f, 0.0f };
 	int dmg = 20;
 }Monster;
 
@@ -114,16 +115,16 @@ typedef struct {
 	int type = 60;
 	int player1Id = 0; // 감정을 전달하는 플레이어
 	int player2Id = 0; // 감정을 전달 당하는 플레이어
-	int emotion; // 전달된 감정 수치
+	int emotion[4]; // 전달된 감정 수치
 }Player2Player;
 
 typedef struct {
 	int type = 61;
-	int emotion;
+	int emotion[4];
 }Player2Monster;
 
 typedef struct {
 	int type = 62;
 	int objectId = 0; // 감정이 상승되는 오브젝트
-	int emotion; // 상승된 감정 수치
+	int emotion[4]; // 상승된 감정 수치
 }Player2Object;

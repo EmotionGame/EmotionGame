@@ -99,9 +99,14 @@ void UserManager::setUserHp(int index, int dmg)
 }
 void UserManager::update()
 {
+	lock_guard<mutex>lock(g_mutex);
+	// 1초마다 감정으로 인한 효과 적용 후 감정 감소
 	int emotionUpdate[4] = { -1,-1,-1,-1 };
-	for (int i = 0; i < users.size(); i++)
+	for (int i = 0; i < users.size(); i++) {
+		effect(i);
 		setUserEmotion(i, emotionUpdate);
+	}
+
 }
 bool UserManager::setJob(int index, char* data)
 {
@@ -116,6 +121,43 @@ char* UserManager::getJob(int index)
 	char* buf = NULL;
 	users[index].second->jobBuf.try_pop(buf);
 	return buf;
+}
+
+void UserManager::effect(int index)
+{
+	lock_guard<mutex>lock(c_mutex[index]);
+	// rollback 필요 - 크기, 이속 등
+	users[index].second->userInfo.speed = 10;
+	users[index].second->userInfo.hp /= 2;
+	users[index].second->userInfo.scale[0] = 1.0;
+	users[index].second->userInfo.scale[1] = 1.0;
+	users[index].second->userInfo.scale[2] = 1.0;
+
+	int max = 0;
+	for (int i = 0; i < 4; i++) {
+		if (users[index].second->userInfo.emotion[i] > max) {
+			max = users[index].second->userInfo.emotion[i];
+		}
+	}
+
+	switch (max)
+	{
+	case 0: break;
+	case 1: users[index].second->userInfo.hp += 1;
+		break;
+	// 분노
+	case 2:users[index].second->userInfo.hp *= 2;
+		break;
+	// 공포 - 속도
+	case 3:users[index].second->userInfo.speed = 11.0;
+		break;
+	// 놀람 - 크기
+	case 4:
+		users[index].second->userInfo.scale[0] = 0.5;
+		users[index].second->userInfo.scale[1] = 0.5;
+		users[index].second->userInfo.scale[2] = 0.5;
+		break;
+	}
 }
 
 bool UserManager::alive(int index)

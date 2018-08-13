@@ -25,7 +25,7 @@ char* MonsterManager::getMonsterInfo()
 	return (char*)&_monster;
 }
 
-void MonsterManager::injectEmo(int emotion[4])
+void MonsterManager::setEmotion(int emotion[4])
 {
 	lock_guard<mutex>lock(_lock);
 	int type = 0;
@@ -45,6 +45,46 @@ int MonsterManager::getEmotion()
 int MonsterManager::getDmg()
 {
 	return _monster.dmg;
+}
+
+void MonsterManager::setMonsterState(int emo, int new_emo)
+{
+	switch (emo)
+	{
+	// 0감, 기쁨
+	case 0: 
+	case 1: 
+		break;
+	// 분노
+	case 2: _monster.dmg /= 2;
+		break;
+	// 공포
+	case 3:
+		_monster.speed = 9.0f;
+		break;
+	// 놀람 // scale 감소
+	case 4:
+		break;
+	}
+
+	switch (new_emo)
+	{
+	case 0:
+	// 기쁨
+	case 1:
+		break;
+	// 분노
+	case 2: _monster.dmg *= 2;
+		break;
+	// 공포
+	case 3:
+		_monster.speed = 10.0f;
+		break;
+	// 놀람 // scale 증가
+	case 4:
+		break;
+	}
+	cout << "MONSTER CURRENT EMOTION>>" << new_emo << endl;
 }
 
 void MonsterManager::setJob(char* data)
@@ -69,11 +109,12 @@ void MonsterManager::upDate()
 	// 공격 후 1초 정지를 위한 tok 설정
 	if (tok >= 1000) {
 		atked = false;
+		cout << "MONSTER EMOTION>>" << _emotion << endl;
 		switch (_emotion)
 		{
-		case 0:case 1:case 2:break;
-			// 공격성
-		case 3:case 4:
+		case 0:case 1:break;
+		// 공격성
+		case 2:case 3:case 4:
 		{
 			// 가까이 있으면 공격 / 가까운 유저 확인->이동
 			int userIndex = 0;
@@ -103,6 +144,7 @@ void MonsterManager::upDate()
 					setJob((char*)atk);
 					// 공격 주기 및 공격 후 1초 정지를 위한 tic 설정
 					tic = clock();
+					cout << "----------------------------------------------ATK-------------------------------" << endl;
 					atked = true;
 				}
 			}
@@ -112,6 +154,7 @@ void MonsterManager::upDate()
 				setDirection(userIndex, min);
 				setJob(getMonsterInfo());
 			}
+			break;
 		}
 		default:
 			break;
@@ -124,6 +167,7 @@ void MonsterManager::upDate()
 				_monster.emotion[i] -= 1;
 		}
 		emoTic = clock();
+		setEmostate(_emotion);
 	}
 }
 
@@ -154,17 +198,21 @@ bool MonsterManager::getStart()
 void MonsterManager::setEmostate(int lastEmo)
 {
 	int max = 0;
+	int currentEmotion = _emotion;
 	for (int i = 0; i < 4; i++) {
 		if (_monster.emotion[i] > max) {
 			max = _monster.emotion[i];
 			_emotion = i + 1;
 		}
+		// 같은 값이면 최근 감정으로 표현
 		else if (_monster.emotion[i] == max) {
 			_emotion = lastEmo + 1;
 		}
 	}
 	if (max == 0)
 		_emotion = 0;
+	if (_emotion != currentEmotion)
+		setMonsterState(currentEmotion, _emotion);
 }
 
 void MonsterManager::setDirection(int userIndex, float distance)
@@ -172,6 +220,6 @@ void MonsterManager::setDirection(int userIndex, float distance)
 	float* pos = _userManager->getUserPos(userIndex);
 	for (int i = 0; i < 3; i++) {
 		_monster.rotation[i] = (pos[i] - _monster.position[i]) / distance;
-		_monster.position[i] += _monster.rotation[i] * _monster.speed * 0.03;
+		_monster.position[i] += _monster.rotation[i] * _monster.speed *0.2;
 	}
 }
