@@ -109,7 +109,7 @@ void MonsterManager::upDate()
 	// 공격 후 1초 정지를 위한 tok 설정
 	if (tok >= 1000) {
 		atked = false;
-		cout << "MONSTER EMOTION>>" << _emotion << endl;
+		//cout << "MONSTER EMOTION>>" << _emotion << endl;
 		switch (_emotion)
 		{
 		case 0:case 1:break;
@@ -118,7 +118,7 @@ void MonsterManager::upDate()
 		{
 			// 가까이 있으면 공격 / 가까운 유저 확인->이동
 			int userIndex = 0;
-			float min = INT_MAX;
+			float min = MAXDISTANCE;
 			float* pos = NULL;
 			// 가장 가까운 유저 확인
 			for (int i = 0; i < _userManager->size(); i++) {
@@ -126,6 +126,7 @@ void MonsterManager::upDate()
 				float distance = sqrt(pow(pos[0] - _monster.position[0], 2)
 					+ pow(pos[1] - _monster.position[1], 2)
 					+ pow(pos[2] - _monster.position[2], 2));
+				cout << distance << endl;
 				if (distance < min && _userManager->alive(i)) {
 					min = distance;
 					userIndex = i;
@@ -151,6 +152,8 @@ void MonsterManager::upDate()
 			// 공격을 안했으면 이동
 			if (atked == false) {
 				// 거리내 없으면 이동
+				cout << "ATKED>>FALSE" << endl;
+				cout << min << endl;
 				setDirection(userIndex, min);
 				setJob(getMonsterInfo());
 			}
@@ -218,8 +221,9 @@ void MonsterManager::setEmostate(int lastEmo)
 void MonsterManager::setDirection(int userIndex, float distance)
 {
 	float* pos = _userManager->getUserPos(userIndex);
+	cout << "DISTANCE>>" << distance << endl;
 	for (int i = 0; i < 3; i++) {
 		_monster.rotation[i] = (pos[i] - _monster.position[i]) / distance;
-		_monster.position[i] += _monster.rotation[i] * _monster.speed *0.2;
+		_monster.position[i] += _monster.rotation[i] * (_monster.speed/10);
 	}
 }
