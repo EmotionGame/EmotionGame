@@ -58,10 +58,10 @@ float Object::randomValue()
 	mt19937_64 rnd(rn());
 
 	//< 2단계. 분포 설정 ( 정수 )
-	uniform_int_distribution<int> range(0, 10);
+	uniform_int_distribution<int> range(0, 60);
 	random = range(rnd);
 	srand(clock());
 	if (rand() % 2 == 0)
 		random *= -1;
-	return random;
+	return 128+random;
 }

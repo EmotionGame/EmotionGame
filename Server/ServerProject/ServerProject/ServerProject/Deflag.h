@@ -2,7 +2,7 @@
 
 #define BUFSIZE 256
 #define POOLSIZE 10
-#define USERSIZE 4
+#define USERSIZE 2
 
 #define EMOTIONSIZE 4
 
@@ -82,7 +82,7 @@ typedef struct {
 
 typedef struct {
 	int type = MONSTER_PACKET;
-	float speed = 9.0f;
+	float speed = 9.00;
 	int emotion[4] = { 0,0,0,0 };
 	float position[3] = { 128,128,128 };
 	float rotation[3] = { 0, 0, 0 };

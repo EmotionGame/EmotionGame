@@ -1,5 +1,4 @@
-﻿  MonsterManager.cpp
-c:\users\bluehobbit\source\repos\serverproject\serverproject\serverproject\monstermanager.cpp(121): warning C4305: '초기화 중': 'int'에서 'float'(으)로 잘립니다.
-c:\users\bluehobbit\source\repos\serverproject\serverproject\serverproject\monstermanager.cpp(136): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
-c:\users\bluehobbit\source\repos\serverproject\serverproject\serverproject\monstermanager.cpp(223): warning C4244: '+=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+﻿  UserManager.cpp
+c:\users\bluehobbit\source\repos\serverproject\serverproject\serverproject\usermanager.cpp(50): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+c:\users\bluehobbit\source\repos\serverproject\serverproject\serverproject\usermanager.cpp(117): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
   ServerProject.vcxproj -> C:\Users\bluehobbit\source\repos\ServerProject\ServerProject\Debug\ServerProject.exe

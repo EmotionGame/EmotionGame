@@ -216,9 +216,11 @@ UINT WINAPI IOCPServer::completionThread()
 							broadcastSend(EVENT_PACKET, i);
 						gameSetting = true;
 					}
+					//_userManager->start();
 					_monsterManager->start();
 					broadcastSend(MONSTER_PACKET, 0);
 				}
+
 				// 초기 접속 시 바로 자신의 아이디 전달
 				pIoData = new PER_IO_DATA();
 				memset(&(pIoData->overlapped), 0, sizeof(OVERLAPPED));
@@ -229,6 +231,7 @@ UINT WINAPI IOCPServer::completionThread()
 				pIoData->operationType = WRITE;
 				dwFlag = 0;
 				WSASend(pHandleData->sock, &pIoData->wsaBuf, 1, &dwBytesTransferred, 0, NULL, NULL);
+
 				continue;
 			}
 			case QUIT:
@@ -321,6 +324,7 @@ UINT WINAPI IOCPServer::completionThread()
 					case USER_EVENT_PACKET:
 					{
 						// 유저가 이벤트를 먹음
+						cout << "USER_EVENT_PACKET" << endl;
 						UserEventPacket* getEvent = reinterpret_cast<UserEventPacket*>(&pIoData->buffer[offset]);
 						if (_eventManager->validate(getEvent->eventId, getEvent->pos)) {
 							if (getEvent->eventId == 1 || getEvent->eventId == 2 || getEvent->eventId == 6 || getEvent->eventId == 7) {
@@ -341,6 +345,7 @@ UINT WINAPI IOCPServer::completionThread()
 					}
 					case USER_MONSTER_PACKET:
 					{
+						cout << "USER_MONSTER_PACKET" << endl;
 						UserMonsterPacket* collisionMonster = reinterpret_cast<UserMonsterPacket*>(&pIoData->buffer[offset]);
 						cout << "CollisionMonster>>PlayerID>>" << collisionMonster->playerId << endl;
 						_monsterManager->validate(users[collisionMonster->playerId], collisionMonster->position, collisionMonster->collision);
@@ -349,6 +354,7 @@ UINT WINAPI IOCPServer::completionThread()
 					}
 					case VIEW_PLAYER:
 					{
+						cout << "VIEW_PLAYER>>" << endl;
 						Player2Player* pTplayer= reinterpret_cast<Player2Player*>(&pIoData->buffer[offset]);
 						_userManager->setUserEmotion(pTplayer->player2Id, pTplayer->emotion);
 						int decrease[4] = { 0, 0, 0, 0 };
@@ -361,12 +367,14 @@ UINT WINAPI IOCPServer::completionThread()
 					}
 					case VIEW_MONSTER:
 					{
+						cout << "VIEW_MONSTER>>" << endl;
 						Player2Monster* pTmonster = reinterpret_cast<Player2Monster*>(&pIoData->buffer[offset]);
 						_monsterManager->setEmotion(pTmonster->emotion);
 						offset += sizeof(Player2Monster);
 						break;
 					}
 					case VIEW_OBJECT:
+						cout << "VIEW_OBJECT>>" << endl;
 						Player2Object* pTobject = reinterpret_cast<Player2Object*>(&pIoData->buffer[offset]);
 						_object->injectEmo(pTobject->objectId, pTobject->emotion);
 						offset += sizeof(Player2Object);

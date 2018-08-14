@@ -157,20 +157,8 @@ void EventManager::updateEvent(int i, clock_t time)
 	case 0:
 		// 몬스터가 오브젝트 공격 시작
 		eventQueue_[i].time = time * 1000;
-		//eventQueue_[i].eventPacket->state = false;
 		break;
 	}
-}
-bool EventManager::userInEvent(int i, float pos[3])
-{
-	// 해당 이벤트와 거리 비교
-	float distance = sqrt(pow(eventQueue_[i].eventPacket->position[0] - pos[0], 2)
-		+ pow(eventQueue_[i].eventPacket->position[1] - pos[1], 2)
-		+ pow(eventQueue_[i].eventPacket->position[2] - pos[2], 2));
-	if (eventQueue_[i].eventPacket->state && distance <= 3.0) {
-		return true;
-	}
-	return false;
 }
 
 int EventManager::randomValue(clock_t t)
@@ -181,10 +169,10 @@ int EventManager::randomValue(clock_t t)
 	mt19937_64 rnd(rn());
 
 	//< 2단계. 분포 설정 ( 정수 )
-	uniform_int_distribution<int> range(128, 188);
+	uniform_int_distribution<int> range(0, 80);
 	random = range(rnd);
 	srand(t);
 	if (rand() % 2 == 0)
 		random *= -1;
-	return random;
+	return 128+random;
 }

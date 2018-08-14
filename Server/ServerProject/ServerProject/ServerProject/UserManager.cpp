@@ -44,6 +44,12 @@ bool UserManager::exitUser(SOCKET sock, int index)
 	free(users[index].second);
 	return true;
 }
+void UserManager::start()
+{
+	lock_guard<mutex>lock(g_mutex);
+	for (int i = 0; i < users.size(); i++) 
+		users[i].second->userInfo.type = 31;
+}
 bool UserManager::setUserInfo(int index, char* data)
 {
 	lock_guard<mutex>lock(c_mutex[index]);
@@ -84,11 +90,17 @@ float* UserManager::getUserPos(int index)
 void UserManager::setUserEmotion(int index, int emotion[4])
 {
 	lock_guard<mutex>lock(c_mutex[index]);
+	// 현재의 가장 높은 감정 저장/변경되었다면 유저 세팅 변경
+	int current_emotion = 0;
 	for (int i = 0; i < 4; i++) {
-		if(users[index].second->userInfo.emotion[i] + emotion[i] <= 100
-			&& users[index].second->userInfo.emotion[i] + emotion[i] >= 0)
+		if (users[index].second->userInfo.emotion[i] > current_emotion)
+			current_emotion = users[index].second->userInfo.emotion[i];
+	}
+	for (int i = 0; i < 4; i++) {
+		if (users[index].second->userInfo.emotion[i] + emotion[i] <= 100 && users[index].second->userInfo.emotion[i] + emotion[i] >= 0) 
 			users[index].second->userInfo.emotion[i] += emotion[i];
 	}
+	effect(index, current_emotion);
 }
 void UserManager::setUserHp(int index, int dmg)
 {
@@ -103,10 +115,14 @@ void UserManager::update()
 	// 1초마다 감정으로 인한 효과 적용 후 감정 감소
 	int emotionUpdate[4] = { -1,-1,-1,-1 };
 	for (int i = 0; i < users.size(); i++) {
-		effect(i);
+		int current_emotion = 0;
+		for (int ei = 0; ei < 4; ei++) {
+			if (users[i].second->userInfo.emotion[ei] > current_emotion)
+				current_emotion = users[i].second->userInfo.emotion[ei];
+		}
+		effect(i, current_emotion);
 		setUserEmotion(i, emotionUpdate);
 	}
-
 }
 bool UserManager::setJob(int index, char* data)
 {
@@ -123,35 +139,45 @@ char* UserManager::getJob(int index)
 	return buf;
 }
 
-void UserManager::effect(int index)
+void UserManager::effect(int index, int current_emotion)
 {
-	lock_guard<mutex>lock(c_mutex[index]);
-	// rollback 필요 - 크기, 이속 등
-	users[index].second->userInfo.speed = 10;
-	users[index].second->userInfo.hp /= 2;
-	users[index].second->userInfo.scale[0] = 1.0;
-	users[index].second->userInfo.scale[1] = 1.0;
-	users[index].second->userInfo.scale[2] = 1.0;
-
-	int max = 0;
-	for (int i = 0; i < 4; i++) {
-		if (users[index].second->userInfo.emotion[i] > max) {
-			max = users[index].second->userInfo.emotion[i];
-		}
+	//lock_guard<mutex>lock(c_mutex[index]);
+	// 무감각,기쁨,분노,공포(속도),놀람(크기)
+	switch (current_emotion)
+	{
+	case 0:
+	case 1:break;
+	case 2:users[index].second->userInfo.hp /= 2;
+		break;
+	case 3:users[index].second->userInfo.speed = 10.0;
+		break;
+	case 4:
+		users[index].second->userInfo.scale[0] = 1.0;
+		users[index].second->userInfo.scale[1] = 1.0;
+		users[index].second->userInfo.scale[2] = 1.0;
+		break;
+	default:
+		break;
 	}
-
-	switch (max)
+	
+	int new_emotion = 0;
+	for (int i = 0; i < 4; i++) {
+		if (users[index].second->userInfo.emotion[i] > current_emotion) 
+			new_emotion = users[index].second->userInfo.emotion[i];
+	}
+	
+	switch (new_emotion)
 	{
 	case 0: break;
 	case 1: users[index].second->userInfo.hp += 1;
 		break;
-	// 분노
+		// 분노
 	case 2:users[index].second->userInfo.hp *= 2;
 		break;
-	// 공포 - 속도
+		// 공포 - 속도
 	case 3:users[index].second->userInfo.speed = 11.0;
 		break;
-	// 놀람 - 크기
+		// 놀람 - 크기
 	case 4:
 		users[index].second->userInfo.scale[0] = 0.5;
 		users[index].second->userInfo.scale[1] = 0.5;

@@ -24,7 +24,7 @@ public:
 
 	int enterUser(SOCKET sock);
 	bool exitUser(SOCKET sock, int index);
-
+	void start();
 	bool setUserInfo(int index, char* data);
 	char* getUserInfo(int index);
 
@@ -39,7 +39,7 @@ public:
 	bool setJob(int index, char* data);
 	char* getJob(int index);
 
-	void effect(int index);
+	void effect(int index, int current_emotion);
 
 	bool alive(int index);
 
