@@ -80,7 +80,8 @@ bool CollisionDetection::Render(ID3D11DeviceContext* pDeviceContext, XMMATRIX wo
 
 		if (lineRenderFlag)
 		{
-			m_Line.InitializeBuffers(m_Device, m_Vertex, XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f));
+			//m_Line.InitializeBuffers(m_Device, m_Vertex, XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f));
+			m_Line.UpdateBuffers(pDeviceContext, m_Vertex, XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f));
 			m_Line.Render(pDeviceContext, XMMatrixIdentity(), viewMatrix, projectionMatrix, m_CollisionCheck);
 		}
 		break;
@@ -91,7 +92,8 @@ bool CollisionDetection::Render(ID3D11DeviceContext* pDeviceContext, XMMATRIX wo
 
 		if (lineRenderFlag)
 		{
-			m_Line.InitializeBuffers(m_Device, m_Vertex, XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f));
+			//m_Line.InitializeBuffers(m_Device, m_Vertex, XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f));
+			m_Line.UpdateBuffers(pDeviceContext, m_Vertex, XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f));
 			m_Line.Render(pDeviceContext, m_WorldMatrixOBB, viewMatrix, projectionMatrix, m_CollisionCheck);
 		}
 		break;

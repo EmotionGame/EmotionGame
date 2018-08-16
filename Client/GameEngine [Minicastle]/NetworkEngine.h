@@ -62,6 +62,18 @@ public:
 	std::mutex& GetSendOPQueueMutex();
 	std::mutex& GetRecvOPQueueMutex();
 
+	std::queue<Player2Player>* GetSendP2PQueue();
+	std::mutex& GetSendP2PQueueMutex();
+
+	std::queue<Player2Monster>* GetSendP2MQueue();
+	std::mutex& GetSendP2MQueueMutex();
+
+	std::queue<Player2Object>* GetSendP2OQueue();
+	std::mutex& GetSendP2OQueueMutex();
+
+	std::queue<GameOverPacket>* GetRecvGOPQueue();
+	std::mutex& GetRecvGOPQueueMutex();
+
 private:
 	HWND m_hwnd;
 
@@ -122,6 +134,18 @@ private:
 	std::queue<ObejctPacket>* m_RecvObjectPacketQueue;
 	std::mutex m_SendOPQueueMutex;
 	std::mutex m_RecvOPQueueMutex;
+
+	std::queue<Player2Player>* m_SendPlayer2PlayerQueue;
+	std::mutex m_SendP2PQueueMutex;
+
+	std::queue<Player2Monster>* m_SendPlayer2MonsterQueue;
+	std::mutex m_SendP2MQueueMutex;
+
+	std::queue<Player2Object>* m_SendPlayer2ObjectQueue;
+	std::mutex m_SendP2OQueueMutex;
+
+	std::queue<GameOverPacket>* m_RecvGameOverPacketQueue;
+	std::mutex m_RecvGOPQueueMutex;
 };
 
 /*

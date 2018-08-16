@@ -31,6 +31,8 @@ public:
 
 	void Navigation(HID* pHID, float deltaTime);
 
+	XMFLOAT3 GetLookAt();
+
 private:
 	bool m_Navigation = false;
 

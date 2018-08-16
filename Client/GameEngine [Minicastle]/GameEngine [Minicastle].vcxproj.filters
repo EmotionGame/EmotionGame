@@ -63,6 +63,9 @@
     <Filter Include="Files\_GameEngine\_PhysicsEngine">
       <UniqueIdentifier>{9c7ce9ec-46cd-4c38-b4bd-dd5260baeba0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Files\_GameEngine\_RenderingEngine\_ModelManager\_Model\_Player">
+      <UniqueIdentifier>{4f8c5f0d-e0f0-4ec3-8399-c1a0e47f68ff}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AlignedAllocationPolicy.h">
@@ -206,6 +209,15 @@
     <ClInclude Include="Monster.h">
       <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model</Filter>
     </ClInclude>
+    <ClInclude Include="Object.h">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model</Filter>
+    </ClInclude>
+    <ClInclude Include="Emotion.h">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model\_Player</Filter>
+    </ClInclude>
+    <ClInclude Include="EmotionShader.h">
+      <Filter>Files\_GameEngine\_RenderingEngine\_Shader</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -328,6 +340,15 @@
     <ClCompile Include="Monster.cpp">
       <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model</Filter>
     </ClCompile>
+    <ClCompile Include="Object.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Emotion.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine\_ModelManager\_Model\_Player</Filter>
+    </ClCompile>
+    <ClCompile Include="EmotionShader.cpp">
+      <Filter>Files\_GameEngine\_RenderingEngine\_Shader</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="HLSL\Font.ps">
@@ -372,5 +393,13 @@
     <None Include="HLSL\DelayLoading_vs.hlsl">
       <Filter>HLSL</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="HLSL\Emotion_ps.hlsl">
+      <Filter>HLSL</Filter>
+    </FxCompile>
+    <FxCompile Include="HLSL\Emotion_vs.hlsl">
+      <Filter>HLSL</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

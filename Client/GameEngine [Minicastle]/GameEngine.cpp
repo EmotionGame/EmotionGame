@@ -131,7 +131,7 @@ bool GameEngine::Initialize()
 	}
 
 	// NetworkEngine 객체 초기화
-	if (!m_NetworkEngine->Initialize(m_hwnd, "172.30.1.20", "8090")) // 10.1.8.6 : 10.1.7.107 : 집 172.30.1.20
+	if (!m_NetworkEngine->Initialize(m_hwnd, "127.0.0.1", "8090")) // 10.1.8.6 : 10.1.7.107 : 127.0.0.1
 	{
 		MessageBox(m_hwnd, L"GameEngine.cpp : m_NetworkEngine->Initialize", L"Error", MB_OK);
 		return false;
@@ -250,7 +250,7 @@ bool GameEngine::Frame()
 	// RenderingEngine
 	if (m_FrameTimeSum[1] > m_FrameTimeLimit[1])
 	{
-		if (!m_RenderingEngine->Frame(m_HID, m_CpuPercentage, m_FrameTimeSum[1]))
+		if (!m_RenderingEngine->Frame(m_HID, m_CpuPercentage, m_FrameTimeSum[1], m_screenWidth, m_screenHeight))
 		{
 			MessageBox(m_hwnd, L"GameEngine.cpp : m_RenderingEngine->Frame(m_CpuPercentage, m_FrameTimeSum[1])", L"Error", MB_OK);
 			return false;
@@ -261,7 +261,7 @@ bool GameEngine::Frame()
 	// PhysicsEngine
 	if (m_FrameTimeSum[2] > m_FrameTimeLimit[2])
 	{
-		if (!m_PhysicsEngine->Frame(m_RenderingEngine, m_HID, m_NetworkEngine, m_FrameTimeSum[2]))
+		if (!m_PhysicsEngine->Frame(m_RenderingEngine, m_HID, m_NetworkEngine, m_FrameTimeSum[2], m_screenWidth, m_screenHeight))
 		{
 			MessageBox(m_hwnd, L"GameEngine.cpp : m_PhysicsEngine->Frame(m_FrameTimeSum[2])", L"Error", MB_OK);
 			return false;
@@ -332,7 +332,7 @@ void GameEngine::InitializeWindows(int& rScreenWidth, int& rScreenHeight)
 	m_hinstance = GetModuleHandle(NULL);
 
 	// 프로그램 이름을 지정합니다
-	m_applicationName = L"GameEngine by 김성민B [010-8865-0312]";
+	m_applicationName = L"GameEngine by 김성민B";
 
 	// windows 클래스를 아래와 같이 설정합니다.
 	/*

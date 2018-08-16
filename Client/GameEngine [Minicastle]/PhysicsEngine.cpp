@@ -35,9 +35,9 @@ void PhysicsEngine::Shutdown()
 	
 }
 
-bool PhysicsEngine::Frame(RenderingEngine* pRenderingEngine, HID* pHID, NetworkEngine* pNetworkEngine, float deltaTime)
+bool PhysicsEngine::Frame(RenderingEngine* pRenderingEngine, HID* pHID, NetworkEngine* pNetworkEngine, float deltaTime, int screenWidth, int screenHeight)
 {
-	pRenderingEngine->Physics(pHID, pNetworkEngine, deltaTime);
+	pRenderingEngine->Physics(pHID, pNetworkEngine, deltaTime, screenWidth, screenHeight);
 
 	return true;
 }

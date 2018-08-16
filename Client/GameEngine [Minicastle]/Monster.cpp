@@ -2,7 +2,23 @@
 #include "Model.h"
 #include "Monster.h"
 
-void Monster::SetSpeed(int speed)
+void Monster::PlayerAnimation(float deltaTime)
+{
+	/***** 애니메이션 재생 관리 : 시작 *****/
+	m_SumDeltaTime += deltaTime;
+	if (m_SumDeltaTime > 33.33f)
+	{
+		m_AnimFrameCount++;
+		if (m_AnimFrameCount >= m_AnimFrameSize)
+		{
+			m_AnimFrameCount = 0;
+		}
+		m_SumDeltaTime = 0.0f;
+	}
+	/***** 애니메이션 재생 관리 : 종료 *****/
+}
+
+void Monster::SetSpeed(float speed)
 {
 	m_Speed = speed;
 
@@ -19,13 +35,13 @@ void Monster::SetDamage(int damage)
 	m_Damage = damage;
 }
 
-int Monster::GetSpeed()
+float Monster::GetSpeed()
 {
-		return m_Speed;
+	return m_Speed;
 }
 int* Monster::GetEmotion()
 {
-		return m_Emotion;
+	return m_Emotion;
 }
 int Monster::GetDamage()
 {

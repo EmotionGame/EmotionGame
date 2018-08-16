@@ -84,7 +84,7 @@ bool DelayLoadingShader::InitializeShader(ID3D11Device* pDevice, HWND hwnd, WCHA
 	hResult = pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &m_vertexShader);
 	if (FAILED(hResult))
 	{
-		MessageBox(m_hwnd, L"DelayLoadingShader.cpp : device->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &m_vertexShader);", L"Error", MB_OK);
+		MessageBox(m_hwnd, L"DelayLoadingShader.cpp : pDevice->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &m_vertexShader);", L"Error", MB_OK);
 		return false;
 	}
 
@@ -92,7 +92,7 @@ bool DelayLoadingShader::InitializeShader(ID3D11Device* pDevice, HWND hwnd, WCHA
 	hResult = pDevice->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_pixelShader);
 	if (FAILED(hResult))
 	{
-		MessageBox(m_hwnd, L"DelayLoadingShader.cpp : device->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_pixelShader);", L"Error", MB_OK);
+		MessageBox(m_hwnd, L"DelayLoadingShader.cpp : pDevice->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_pixelShader);", L"Error", MB_OK);
 		return false;
 	}
 
@@ -121,7 +121,7 @@ bool DelayLoadingShader::InitializeShader(ID3D11Device* pDevice, HWND hwnd, WCHA
 	hResult = pDevice->CreateInputLayout(polygonLayout, numElements, vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_layout);
 	if (FAILED(hResult))
 	{
-		MessageBox(m_hwnd, L"DelayLoadingShader.cpp : device->CreateInputLayout(polygonLayout, numElements, vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_layout);", L"Error", MB_OK);
+		MessageBox(m_hwnd, L"DelayLoadingShader.cpp : pDevice->CreateInputLayout(polygonLayout, numElements, vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_layout);", L"Error", MB_OK);
 		return false;
 	}
 
@@ -152,7 +152,7 @@ bool DelayLoadingShader::InitializeShader(ID3D11Device* pDevice, HWND hwnd, WCHA
 	hResult = pDevice->CreateSamplerState(&samplerDesc, &m_sampleState);
 	if (FAILED(hResult))
 	{
-		MessageBox(m_hwnd, L"DelayLoadingShader.cpp : device->CreateSamplerState(&samplerDesc, &m_sampleState);", L"Error", MB_OK);
+		MessageBox(m_hwnd, L"DelayLoadingShader.cpp : pDevice->CreateSamplerState(&samplerDesc, &m_sampleState);", L"Error", MB_OK);
 		return false;
 	}
 
@@ -169,7 +169,7 @@ bool DelayLoadingShader::InitializeShader(ID3D11Device* pDevice, HWND hwnd, WCHA
 	hResult = pDevice->CreateBuffer(&matrixBufferDesc, NULL, &m_matrixBuffer);
 	if (FAILED(hResult))
 	{
-		MessageBox(m_hwnd, L"DelayLoadingShader.cpp : device->CreateBuffer(&matrixBufferDesc, NULL, &m_matrixBuffer);", L"Error", MB_OK);
+		MessageBox(m_hwnd, L"DelayLoadingShader.cpp : pDevice->CreateBuffer(&matrixBufferDesc, NULL, &m_matrixBuffer);", L"Error", MB_OK);
 		return false;
 	}
 

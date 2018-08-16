@@ -403,3 +403,28 @@ bool Text::SetSentenceWithFLOAT(char* pFrontSentence, float pData, char* pBackSe
 
 	return true;
 }
+
+bool Text::SetSentenceWithINT4(char* pFrontSentence, int pData[4], char* pBackSentence, ID3D11DeviceContext* pDeviceContext)
+{
+	char resultString[64];
+
+	for(int i = 0; i < 4; i++)
+	{
+		if (pData[i] < 0 || pData[i] > 100)
+		{
+			pData[i] = 0;
+		}
+	}
+
+	// Convert the mainObjects integer to string format.
+	sprintf_s(resultString, "%s%d   %d   %d   %d%s", pFrontSentence, pData[0], pData[1], pData[2], pData[3], pBackSentence);
+
+	// 문장 정점 버퍼를 새 문자열 정보로 업데이트합니다.
+	if (!UpdateSentence(m_sentence, resultString, pDeviceContext, m_positionX, m_positionY, m_red, m_green, m_blue))
+	{
+		MessageBox(m_hwnd, L"Text.cpp : UpdateSentence(m_sentence, resultString, deviceContext, m_positionX, m_positionY, m_red, m_green, m_blue)", L"Error", MB_OK);
+		return false;
+	}
+
+	return true;
+}

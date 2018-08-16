@@ -12,7 +12,7 @@ public:
 
 	bool Initialize(HWND hwnd);
 	void Shutdown();
-	bool Frame(RenderingEngine* pRenderingEngine, HID* pHID, NetworkEngine* pNetworkEngine, float deltaTime);
+	bool Frame(RenderingEngine* pRenderingEngine, HID* pHID, NetworkEngine* pNetworkEngine, float deltaTime, int screenWidth, int screenHeight);
 
 private:
 	HWND m_hwnd;

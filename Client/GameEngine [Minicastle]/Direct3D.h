@@ -29,6 +29,9 @@ public:
 	void TurnOnCulling();
 	void TurnOffCulling();
 
+	/***** 감정 전달용 알파 스테이트 : 시작 *****/
+	void TurnOnEmotionAlphaBlending();
+	/***** 감정 전달용 알파 스테이트 : 종료 *****/
 private:
 	HWND m_hwnd;
 
@@ -51,4 +54,8 @@ private:
 	ID3D11DepthStencilState* m_depthDisabledStencilState = nullptr;
 	ID3D11BlendState* m_alphaEnableBlendingState = nullptr;
 	ID3D11BlendState* m_alphaDisableBlendingState = nullptr;
+
+	/***** 감정 전달용 알파 스테이트 : 시작 *****/
+	ID3D11BlendState* m_emotionAlphaState = nullptr;
+	/***** 감정 전달용 알파 스테이트 : 종료 *****/
 };

@@ -7,7 +7,7 @@
 void Player::PlayerAnimation(float deltaTime)
 {
 	/***** 애니메이션 재생 관리 : 시작 *****/
-	m_SumDeltaTime += deltaTime * m_Acceleration.z * 50.0f;
+	m_SumDeltaTime += deltaTime * m_Acceleration.z * 75.0f;
 	if (m_SumDeltaTime > 41.66f) // 1초당 24프레임
 	{
 		m_AnimFrameCount++;
@@ -32,17 +32,27 @@ void Player::PlayerAnimation(float deltaTime)
 	/***** 애니메이션 재생 관리 : 종료 *****/
 }
 
-void Player::MoveObejctToLookAt()
+void Player::MoveObejctToLookAt(float deltaTime)
 {
-	m_ModelTranslation.x += m_Acceleration.z * static_cast<float>(m_Speed) * m_LootAt.x;
+	m_ModelTranslation.x += m_Acceleration.z * m_Speed * m_LootAt.x * deltaTime * 0.07f;
 	//m_ModelTranslation.y += value.y * m_LootAt.y;
-	m_ModelTranslation.z += m_Acceleration.z * static_cast<float>(m_Speed) * m_LootAt.z;
+	m_ModelTranslation.z += m_Acceleration.z * m_Speed * m_LootAt.z * deltaTime * 0.07f;
+
+	if (m_ModelTranslation.x < 20.0f)
+		m_ModelTranslation.x = 20.0f;
+	if (m_ModelTranslation.x > 230.0f)
+		m_ModelTranslation.x = 230.0f;
 }
-void Player::MoveObejctToLookAtSide()
+void Player::MoveObejctToLookAtSide(float deltaTime)
 {
-	m_ModelTranslation.x += m_Acceleration.x * static_cast<float>(m_Speed) * m_Side.x;
+	m_ModelTranslation.x += m_Acceleration.x * m_Speed * m_Side.x * deltaTime * 0.05f;
 	//m_ModelTranslation.y += value.y * m_Side.y;
-	m_ModelTranslation.z += m_Acceleration.x * static_cast<float>(m_Speed) * m_Side.z;
+	m_ModelTranslation.z += m_Acceleration.x * m_Speed * m_Side.z * deltaTime * 0.05f;
+
+	if (m_ModelTranslation.z < 22.0f)
+		m_ModelTranslation.z = 22.0f;
+	if (m_ModelTranslation.z > 237.0f)
+		m_ModelTranslation.z = 237.0f;
 }
 void Player::RotateObject(XMFLOAT3 value)
 {
@@ -130,8 +140,8 @@ void Player::PlayerControl(HID* pHID, QuadTree* pQuadTree, float deltaTime)
 		}
 	}
 
-	MoveObejctToLookAt();
-	MoveObejctToLookAtSide();
+	MoveObejctToLookAt(deltaTime);
+	MoveObejctToLookAtSide(deltaTime);
 
 	if (m_Acceleration.z > 0.0f)
 	{
@@ -180,7 +190,7 @@ void Player::PlayerControl(HID* pHID, QuadTree* pQuadTree, float deltaTime)
 		}
 	}
  
-	m_ModelTranslation.y += m_Acceleration.y * m_Up.y;
+	m_ModelTranslation.y += m_Acceleration.y * m_Up.y * deltaTime * 0.07f;
 
 	m_Acceleration.y -= 0.0005f * deltaTime;
 
@@ -198,21 +208,56 @@ void Player::PlayerControl(HID* pHID, QuadTree* pQuadTree, float deltaTime)
 	CalculateCameraPosition();
 }
 
+void Player::DiedControl(HID* pHID, QuadTree* pQuadTree, float deltaTime)
+{
+	/***** 시점 : 시작 *****/
+	int mouseX, mouseY;
+	pHID->GetMouse_Keyboard()->GetDeltaMouse(mouseX, mouseY);
+
+	float rotateSpeed;
+
+	if (mouseX > 100)
+		mouseX = 0;
+	if (mouseY > 100)
+		mouseY = 0;
+
+	if (deltaTime > 1000.0f)
+	{
+		rotateSpeed = 0.05f;
+	}
+	else
+	{
+		rotateSpeed = 0.05f * deltaTime;
+	}
+
+	RotateObject(XMFLOAT3(rotateSpeed * mouseY, rotateSpeed * mouseX, 0.0f));
+	/***** 시점 : 종료 *****/
+}
+
 void Player::SetHP(int hp)
 {
 	m_HP = hp;
 }
-void Player::SetSpeed(int speed)
+void Player::SetSpeed(float speed)
 {
 	m_Speed = speed;
 
 }
-void Player::SetEmotion(int* emotion)
+void Player::SetEmotion0(int emotion)
 {
-	for (int i = 0; i < 4; i++)
-	{
-		m_Emotion[i] = emotion[i];
-	}
+	m_Emotion[0] = emotion;
+}
+void Player::SetEmotion1(int emotion)
+{
+	m_Emotion[1] = emotion;
+}
+void Player::SetEmotion2(int emotion)
+{
+	m_Emotion[2] = emotion;
+}
+void Player::SetEmotion3(int emotion)
+{
+	m_Emotion[3] = emotion;
 }
 void Player::SetAcceleration(float acceleration[3])
 {
@@ -223,15 +268,27 @@ void Player::SetAcceleration(float acceleration[3])
 
 int Player::GetHP()
 {
-		return m_HP;
+	return m_HP;
 }
-int Player::GetSpeed()
+float Player::GetSpeed()
 {
-		return m_Speed;
+	return m_Speed;
 }
-int* Player::GetEmotion()
+int Player::GetEmotion0()
 {
-		return m_Emotion;
+	return m_Emotion[0];
+}
+int Player::GetEmotion1()
+{
+	return m_Emotion[1];
+}
+int Player::GetEmotion2()
+{
+	return m_Emotion[2];
+}
+int Player::GetEmotion3()
+{
+	return m_Emotion[3];
 }
 XMFLOAT3 Player::GetAcceleration()
 {

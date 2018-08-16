@@ -877,6 +877,8 @@ Model::Model(const Model& rOther)
 	m_DelayLoadingTexture = rOther.m_DelayLoadingTexture;
 
 	m_CollisionType = rOther.m_CollisionType;
+
+	m_FPS = rOther.m_FPS;
 }
 
 bool Model::DelayLoadingInitialize(ID3D11Device* pDevice, HWND hwnd, WCHAR* pTextureFileName, 
@@ -1307,6 +1309,7 @@ bool Model::Render(Direct3D* pDirect3D, ID3D11DeviceContext* pDeviceContext, XMM
 			}
 
 			m_CollisionDetection.at(mc).Render(pDeviceContext, worldMatrix, viewMatrix, projectionMatrix, m_CD_Side, m_CD_Up, m_CD_LootAt, m_ModelRotation, lineRenderFlag);
+			m_FirstRender = true;
 		}
 	}
 	else // 아직 초기화가 되지 않았을 경우 지연 로딩
@@ -1364,20 +1367,28 @@ XMFLOAT3 Model::GetRotation()
 void Model::CalculateCameraPosition()
 {
 	// 1인칭
-	//m_cameraPosition.x = m_ModelTranslation.x + (0.9f * m_LootAt.x);
-	//m_cameraPosition.y = m_ModelTranslation.y + (2.0f * m_DefaultUp.y);
-	//m_cameraPosition.z = m_ModelTranslation.z + (0.9f * m_LootAt.z);
-
-	// 3인칭
-	m_cameraPosition.x = m_ModelTranslation.x + (-10.0f * m_LootAt.x);
-	m_cameraPosition.y = m_ModelTranslation.y + (4.0f * m_DefaultUp.y);
-	m_cameraPosition.z = m_ModelTranslation.z + (-10.0f * m_LootAt.z);
+	if (m_FPS)
+	{
+		m_cameraPosition.x = m_ModelTranslation.x + (0.9f * m_LootAt.x);
+		m_cameraPosition.y = m_ModelTranslation.y + (2.0f * m_DefaultUp.y);
+		m_cameraPosition.z = m_ModelTranslation.z + (0.9f * m_LootAt.z);
+	}
+	else
+	{
+		// 3인칭
+		m_cameraPosition.x = m_ModelTranslation.x + (-10.0f * m_LootAt.x);
+		m_cameraPosition.y = m_ModelTranslation.y + (4.0f * m_DefaultUp.y);
+		m_cameraPosition.z = m_ModelTranslation.z + (-10.0f * m_LootAt.z);
+	}
 }
 XMFLOAT3 Model::GetCameraPosition()
 {
 	return m_cameraPosition;
 }
-
+void Model::SetScale(XMFLOAT3 scale)
+{
+	m_ModelScaling = scale;
+}
 void Model::SetActive(bool active)
 {
 	m_ActiveFlag = active;
@@ -1859,13 +1870,14 @@ void Model::CalculateOBB(CollisionDetection& rCollisionDetection, unsigned int m
 	rCollisionDetection.m_InitOBB.m_Center = center;
 	rCollisionDetection.m_InitOBB.m_Extent = extent;
 }
+
 bool Model::Intersection(Model& rOther)
 {
 	bool intersection = false;
 
-	for (int i = 0; i < m_CollisionDetection.size(); i++)
+	for (unsigned int i = 0; i < m_CollisionDetection.size(); i++)
 	{
-		for (int j = 0; j < rOther.m_CollisionDetection.size(); j++)
+		for (unsigned int j = 0; j < rOther.m_CollisionDetection.size(); j++)
 		{
 			// AABB AABB 교차 검사
 			if (m_CollisionType == AxisAlignedBoundingBox && rOther.m_CollisionType == AxisAlignedBoundingBox)
@@ -1917,10 +1929,29 @@ bool Model::Intersection(Model& rOther)
 
 void Model::InitCollisionCheck()
 {
-	for (int i = 0; i < m_CollisionDetection.size(); i++)
+	for (unsigned int i = 0; i < m_CollisionDetection.size(); i++)
 	{
 		m_CollisionDetection.at(i).SetCollisionCheck(false);
 	}
+}
+
+void Model::GetBBVertex(unsigned int meshIndex, XMFLOAT3 vertex[8])
+{
+	for (int i = 0; i < 8; i++)
+	{
+		vertex[i] = m_CollisionDetection.at(meshIndex).m_Vertex[i];
+	}
+}
+unsigned int Model::GetMeshCount()
+{
+	return m_Info.meshCount;
+}
+XMMATRIX Model::GetWorldMatrixBB(unsigned int meshIndex)
+{
+	if (m_CollisionType == AxisAlignedBoundingBox)
+		return XMMatrixIdentity();
+	else
+		return m_CollisionDetection.at(meshIndex).m_WorldMatrixOBB;
 }
 /********** 본 초기화 : 종료 **********/
 

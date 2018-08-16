@@ -394,6 +394,26 @@ bool Direct3D::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 		return false;
 	}
 
+	/***** 감정 전달용 알파 스테이트 : 시작 *****/
+	D3D11_BLEND_DESC emotion;
+	ZeroMemory(&emotion, sizeof(D3D11_BLEND_DESC));
+	emotion.AlphaToCoverageEnable = false; // true로 하면 알파가 RGB를 가려버리는 문제를 해결합니다.
+
+														// Create an alpha enabled blend state description.
+	emotion.RenderTarget[0].BlendEnable = TRUE;
+	emotion.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE; // 픽셀 셰이더 outputs의 RGB 값에 대한 연산을 수행
+	emotion.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA; // render target의 현재 RGB 값에 대한 연산을 수행
+	emotion.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD; // SrcBlend와 DestBlend를 어떻게 combine 하는 지를 정의
+	emotion.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;  // 픽셀 셰이더 outputs의 A 값에 대한 연산을 수행, _COLOR 옵션은 허용되지 않습니다.
+	emotion.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO; // render target의 현재 A 값에 대한 연산을 수행, _COLOR 옵션은 허용되지 않습니다.
+	emotion.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD; // SrcBlendAlpha와 DestBlendAlpha를 어떻게 combine 하는 지를 정의
+	emotion.RenderTarget[0].RenderTargetWriteMask = 0x0f;
+	if (FAILED(m_device->CreateBlendState(&emotion, &m_emotionAlphaState)))
+	{
+		return false;
+	}
+	/***** 감정 전달용 알파 스테이트 : 종료 *****/
+
 	// Modify the description to create an alpha disabled blend state description.
 	blendStateDescription.RenderTarget[0].BlendEnable = FALSE;
 
@@ -580,4 +600,13 @@ void Direct3D::TurnOffCulling()
 {
 	// 뒷면 없음 컬링 래스터 라이저 상태를 설정합니다.
 	m_deviceContext->RSSetState(m_rasterStateNoCulling);
+}
+
+void Direct3D::TurnOnEmotionAlphaBlending()
+{
+	// Setup the blend factor.
+	float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	// Turn on the alpha blending.
+	m_deviceContext->OMSetBlendState(m_emotionAlphaState, blendFactor, 0xffffffff);
 }

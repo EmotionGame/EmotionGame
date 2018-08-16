@@ -31,11 +31,11 @@ public:
 
 	bool Initialize(HWND hwnd, int screenWidth, int screenHeight);
 	void Shutdown();
-	bool Frame(HID* pHID, int cputPercentage, float deltaTime);
-	bool Physics(HID* pHID, NetworkEngine* pNetworkEngine, float deltaTime);
+	bool Frame(HID* pHID, int cputPercentage, float deltaTime, int screenWidth, int screenHeight);
+	bool Physics(HID* pHID, NetworkEngine* pNetworkEngine, float deltaTime, int screenWidth, int screenHeight);
 
 private:
-	bool Render(float deltaTime);
+	bool Render(float deltaTime, int screenWidth, int screenHeight);
 	void CaluateAverageDeltaTime(float deltaTime);
 
 private:

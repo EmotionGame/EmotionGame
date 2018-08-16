@@ -112,48 +112,78 @@ bool NetworkEngine::Initialize(HWND hwnd, char* pIP, char* pPort)
 		return false;
 	}
 
-	/**** 서버와 연결하지 않았을 때 테스트용 : 시작 *****/
-	UserPacket UPtest;
-	for (int i = 0; i < 4; i++)
+	m_SendPlayer2PlayerQueue = new std::queue<Player2Player>;
+	if (!m_SendPlayer2PlayerQueue)
 	{
-		UPtest.id = i;
-		int x = 16 * (i % 100) + 104;
-		int z = 5 * (i / 100) + 80;
-		UPtest.position[0] = 1.0f * x;
-		UPtest.position[1] = 5.0f;
-		UPtest.position[2] = 1.0f * z;
-		m_RecvUserPacket30Queue->push(UPtest);
-	}
-	for (int i = 0; i < 4; i++)
-	{
-		UPtest.id = i + 4;
-		int x = 16 * (i % 100) + 104;
-		int z = 5 * (i / 100) + 176;
-		UPtest.position[0] = 1.0f * x;
-		UPtest.position[1] = 5.0f;
-		UPtest.position[2] = 1.0f * z;
-		UPtest.rotation[1] = 180.0f;
-		m_RecvUserPacket30Queue->push(UPtest);
+		MessageBox(m_hwnd, L"NetworkEngine.cpp : m_SendPlayer2PlayerQueue", L"Error", MB_OK);
+		return false;
 	}
 
-	EventPacket EPtest;
-	for (int i = 1; i <= 8; i++)
+	m_SendPlayer2MonsterQueue = new std::queue<Player2Monster>;
+	if (!m_SendPlayer2MonsterQueue)
 	{
-		if (i != 5)
-		{
-			EPtest.id = i;
-			int x = 16 * (i % 100) + 72;
-			int z = 5 * (i / 100) + 128;
-			EPtest.position[0] = 1.0f * x;
-			EPtest.position[1] = 5.0f;
-			EPtest.position[2] = 1.0f * z;
-			EPtest.state = true;
-			m_RecvEventPacketQueue->push(EPtest);
-		}
+		MessageBox(m_hwnd, L"NetworkEngine.cpp : m_SendPlayer2MonsterQueue", L"Error", MB_OK);
+		return false;
 	}
 
-	m_ConnectFlag = true;
-	/**** 서버와 연결하지 않았을 때 테스트용 : 종료 *****/
+	m_SendPlayer2ObjectQueue = new std::queue<Player2Object>;
+	if (!m_SendPlayer2ObjectQueue)
+	{
+		MessageBox(m_hwnd, L"NetworkEngine.cpp : m_SendPlayer2ObjectQueue", L"Error", MB_OK);
+		return false;
+	}
+
+	m_RecvGameOverPacketQueue = new std::queue<GameOverPacket>;
+	if (!m_RecvGameOverPacketQueue)
+	{
+		MessageBox(m_hwnd, L"NetworkEngine.cpp : m_RecvGameOverPacketQueue", L"Error", MB_OK);
+		return false;
+	}
+
+	///**** 서버와 연결하지 않았을 때 테스트용 : 시작 *****/
+	//UserPacket UPtest;
+	//for (int i = 0; i < 4; i++)
+	//{
+	//	UPtest.id = i;
+	//	int x = 16 * (i % 100) + 104;
+	//	int z = 5 * (i / 100) + 80;
+	//	UPtest.position[0] = 1.0f * x;
+	//	UPtest.position[1] = 5.0f;
+	//	UPtest.position[2] = 1.0f * z;
+	//	m_RecvUserPacket30Queue->push(UPtest);
+	//}
+	//for (int i = 0; i < 4; i++)
+	//{
+	//	UPtest.id = i + 4;
+	//	int x = 16 * (i % 100) + 104;
+	//	int z = 5 * (i / 100) + 176;
+	//	UPtest.position[0] = 1.0f * x;
+	//	UPtest.position[1] = 5.0f;
+	//	UPtest.position[2] = 1.0f * z;
+	//	UPtest.rotation[1] = 180.0f;
+	//	m_RecvUserPacket30Queue->push(UPtest);
+	//}
+
+	//EventPacket EPtest;
+	//for (int i = 1; i <= 8; i++)
+	//{
+	//	if (i != 5)
+	//	{
+	//		EPtest.id = i;
+	//		int x = 16 * (i % 100) + 72;
+	//		int z = 5 * (i / 100) + 128;
+	//		EPtest.position[0] = 1.0f * x;
+	//		EPtest.position[1] = 5.0f;
+	//		EPtest.position[2] = 1.0f * z;
+	//		EPtest.state = true;
+	//		m_RecvEventPacketQueue->push(EPtest);
+	//	}
+	//}
+
+
+	//m_ConnectFlag = true;
+	///**** 서버와 연결하지 않았을 때 테스트용 : 종료 *****/
+
 
 	/***** Winsock 초기화 *****/
 	if (WSAStartup(MAKEWORD(2, 2), &m_wsaData) != 0)
@@ -235,32 +265,32 @@ bool NetworkEngine::Frame()
 
 bool NetworkEngine::Connect()
 {
-//#ifdef _DEBUG
-//	printf("Start >> NetworkEngine.cpp : Connect()\n");
-//#endif
-//
-//	if (WSAConnect(m_hSocket, (SOCKADDR*)&m_ServerAddr, sizeof(m_ServerAddr), &m_ConnectBuff, NULL, NULL, NULL) == SOCKET_ERROR)
-//	{
-//#ifdef _DEBUG
-//		printf("Fail >> NetworkEngine.cpp : Connect()\n");
-//#endif
-//	}
-//	else
-//	{
-//#ifdef _DEBUG
-//		printf("Success >> NetworkEngine.cpp : Connect()\n");
-//#endif
-//		m_ConnectFlag = true;
-//
-//		// 구조체에 이벤트 핸들을 삽입해서 전달
-//		m_Event = WSACreateEvent();
-//		memset(&m_Overlapped, 0, sizeof(m_Overlapped));
-//		m_Overlapped.hEvent = m_Event;
-//
-//		// Thread 구동
-//		m_hSendThread = (HANDLE)_beginthreadex(NULL, 0, SendThread, (LPVOID)this, 0, NULL);
-//		m_hRecvThread = (HANDLE)_beginthreadex(NULL, 0, RecvThread, (LPVOID)this, 0, NULL);
-//	}
+#ifdef _DEBUG
+	printf("Start >> NetworkEngine.cpp : Connect()\n");
+#endif
+
+	if (WSAConnect(m_hSocket, (SOCKADDR*)&m_ServerAddr, sizeof(m_ServerAddr), &m_ConnectBuff, NULL, NULL, NULL) == SOCKET_ERROR)
+	{
+#ifdef _DEBUG
+		printf("Fail >> NetworkEngine.cpp : Connect()\n");
+#endif
+	}
+	else
+	{
+#ifdef _DEBUG
+		printf("Success >> NetworkEngine.cpp : Connect()\n");
+#endif
+		m_ConnectFlag = true;
+
+		// 구조체에 이벤트 핸들을 삽입해서 전달
+		m_Event = WSACreateEvent();
+		memset(&m_Overlapped, 0, sizeof(m_Overlapped));
+		m_Overlapped.hEvent = m_Event;
+
+		// Thread 구동
+		m_hSendThread = (HANDLE)_beginthreadex(NULL, 0, SendThread, (LPVOID)this, 0, NULL);
+		m_hRecvThread = (HANDLE)_beginthreadex(NULL, 0, RecvThread, (LPVOID)this, 0, NULL);
+	}
 
 	return true;
 }
@@ -282,6 +312,9 @@ UINT WINAPI NetworkEngine::_SendThread()
 		UserPacket tempUP;
 		MonsterPacket tempMP;
 		MonsterAttackPacket tempMAP;
+		Player2Player tempP2P;
+		Player2Monster tempP2M;
+		Player2Object tempP2O;
 
 		/***** ActionPacket : 시작 *****/
 		/***** m_SendAPQueueMutex : 시작 *****/
@@ -293,7 +326,7 @@ UINT WINAPI NetworkEngine::_SendThread()
 			m_SendAPQueueMutex.unlock();
 			/***** m_SendAPQueueMutex : 종료 *****/
 #ifdef _DEBUG
-			printf("Pop >> NetworkEngine.cpp : ActionPacket -> type = %d, id = %d, position = {%f %f %f}, rotation = {%f %f %f}\n",
+			/*printf("Pop >> NetworkEngine.cpp : ActionPacket -> type = %d, id = %d, position = {%f %f %f}, rotation = {%f %f %f}\n",
 				tempAP.type,
 				tempAP.id,
 				tempAP.position[0],
@@ -302,7 +335,7 @@ UINT WINAPI NetworkEngine::_SendThread()
 				tempAP.rotation[0],
 				tempAP.rotation[1],
 				tempAP.rotation[2]
-			);
+			);*/
 #endif
 			m_SendBuff.len = sizeof(ActionPacket);
 			m_SendBuff.buf = (char*)&tempAP;
@@ -525,6 +558,123 @@ UINT WINAPI NetworkEngine::_SendThread()
 		m_SendMAPQueueMutex.unlock();
 		/***** m_SendMAPQueueMutex : 종료 *****/
 		/***** MonsterAttackPacket : 종료 *****/
+
+		/***** Player2Player : 시작 *****/
+		/***** m_SendP2PQueueMutex : 시작 *****/
+		m_SendP2PQueueMutex.lock();
+		if (!m_SendPlayer2PlayerQueue->empty())
+		{
+			tempP2P = m_SendPlayer2PlayerQueue->front();
+			m_SendPlayer2PlayerQueue->pop();
+			m_SendP2PQueueMutex.unlock();
+			/***** m_SendP2PQueueMutex : 종료 *****/
+#ifdef _DEBUG
+			printf("Pop >> NetworkEngine.cpp : Player2Player -> type = %d, playerId1 = %d, playerId2 = %d, emotion = (%d, %d, %d, %d)\n",
+				tempP2P.type,
+				tempP2P.player1Id,
+				tempP2P.player2Id,
+				tempP2P.emotion[0],
+				tempP2P.emotion[1],
+				tempP2P.emotion[2],
+				tempP2P.emotion[3]
+			);
+#endif
+			m_SendBuff.len = sizeof(Player2Player);
+			m_SendBuff.buf = (char*)&tempP2P;
+
+			if (WSASend(m_hSocket, &m_SendBuff, 1, (LPDWORD)&m_SendBytes, 0, &m_Overlapped, NULL) == SOCKET_ERROR)
+			{
+#ifdef _DEBUG
+				printf("Fail >> NetworkEngine.cpp : Player2Player -> WSASend\n");
+#endif
+				continue;
+			}
+#ifdef _DEBUG
+			printf("Success >> NetworkEngine.cpp : Player2Player -> WSASend\n");
+#endif
+			/***** m_SendP2PQueueMutex : 시작 *****/
+			m_SendP2PQueueMutex.lock();
+		}
+		m_SendP2PQueueMutex.unlock();
+		/***** m_SendP2PQueueMutex : 종료 *****/
+		/***** Player2Player : 종료 *****/
+
+		/***** Player2Monster : 시작 *****/
+		/***** m_SendP2MQueueMutex : 시작 *****/
+		m_SendP2MQueueMutex.lock();
+		if (!m_SendPlayer2MonsterQueue->empty())
+		{
+			tempP2M = m_SendPlayer2MonsterQueue->front();
+			m_SendPlayer2MonsterQueue->pop();
+			m_SendP2MQueueMutex.unlock();
+			/***** m_SendP2MQueueMutex : 종료 *****/
+#ifdef _DEBUG
+			printf("Pop >> NetworkEngine.cpp : Player2Monster -> type = %d, emotion = (%d, %d, %d, %d)\n",
+				tempP2M.type,
+				tempP2M.emotion[0],
+				tempP2M.emotion[1],
+				tempP2M.emotion[2],
+				tempP2M.emotion[3]
+			);
+#endif
+			m_SendBuff.len = sizeof(Player2Monster);
+			m_SendBuff.buf = (char*)&tempP2M;
+
+			if (WSASend(m_hSocket, &m_SendBuff, 1, (LPDWORD)&m_SendBytes, 0, &m_Overlapped, NULL) == SOCKET_ERROR)
+			{
+#ifdef _DEBUG
+				printf("Fail >> NetworkEngine.cpp : Player2Monster -> WSASend\n");
+#endif
+				continue;
+			}
+#ifdef _DEBUG
+			printf("Success >> NetworkEngine.cpp : Player2Monster -> WSASend\n");
+#endif
+			/***** m_SendP2MQueueMutex : 시작 *****/
+			m_SendP2MQueueMutex.lock();
+		}
+		m_SendP2MQueueMutex.unlock();
+		/***** m_SendP2MQueueMutex : 종료 *****/
+		/***** Player2Monster : 종료 *****/
+
+		/***** Player2Object : 시작 *****/
+		/***** m_SendP2OQueueMutex : 시작 *****/
+		m_SendP2OQueueMutex.lock();
+		if (!m_SendPlayer2ObjectQueue->empty())
+		{
+			tempP2O = m_SendPlayer2ObjectQueue->front();
+			m_SendPlayer2ObjectQueue->pop();
+			m_SendP2OQueueMutex.unlock();
+			/***** m_SendP2OQueueMutex : 종료 *****/
+#ifdef _DEBUG
+			printf("Pop >> NetworkEngine.cpp : Player2Object -> type = %d, objectId = %d, emotion = (%d, %d, %d, %d)\n",
+				tempP2O.type,
+				tempP2O.objectId,
+				tempP2O.emotion[0],
+				tempP2O.emotion[1],
+				tempP2O.emotion[2],
+				tempP2O.emotion[3]
+			);
+#endif
+			m_SendBuff.len = sizeof(Player2Object);
+			m_SendBuff.buf = (char*)&tempP2O;
+
+			if (WSASend(m_hSocket, &m_SendBuff, 1, (LPDWORD)&m_SendBytes, 0, &m_Overlapped, NULL) == SOCKET_ERROR)
+			{
+#ifdef _DEBUG
+				printf("Fail >> NetworkEngine.cpp : Player2Object -> WSASend\n");
+#endif
+				continue;
+			}
+#ifdef _DEBUG
+			printf("Success >> NetworkEngine.cpp : Player2Object -> WSASend\n");
+#endif
+			/***** m_SendP2OQueueMutex : 시작 *****/
+			m_SendP2OQueueMutex.lock();
+		}
+		m_SendP2OQueueMutex.unlock();
+		/***** m_SendP2OQueueMutex : 종료 *****/
+		/***** Player2Object : 종료 *****/
 	}
 
 	_endthreadex(0);
@@ -545,6 +695,7 @@ UINT WINAPI NetworkEngine::_RecvThread()
 	EventPacket* tempEP;
 	MonsterPacket* tempMP;
 	ObejctPacket* tempOP;
+	GameOverPacket* tempGOP;
 
 	while (1)
 	{
@@ -654,7 +805,7 @@ UINT WINAPI NetworkEngine::_RecvThread()
 					m_RecvUP30QueueMutex.unlock();
 					/***** m_RecvUPQueueMutex : 종료 *****/
 
-					printf("Pop >> NetworkEngine.cpp : UserPacket30 -> type = %d, id = %d, position = {%f %f %f}, rotation = {%f %f %f}\n",
+					printf("Pop >> NetworkEngine.cpp : UserPacket30 -> type = %d, id = %d, position = {%f %f %f}, rotation = {%f %f %f}, emotion = (%d, %d, %d, %d), hp = %d\n",
 						tempUP->type,
 						tempUP->id,
 						tempUP->position[0],
@@ -662,7 +813,12 @@ UINT WINAPI NetworkEngine::_RecvThread()
 						tempUP->position[2],
 						tempUP->rotation[0],
 						tempUP->rotation[1],
-						tempUP->rotation[2]
+						tempUP->rotation[2],
+						tempUP->emotion[0],
+						tempUP->emotion[1],
+						tempUP->emotion[2],
+						tempUP->emotion[3],
+						tempUP->hp
 					);
 
 					/***** m_RecvUPQueueMutex : 시작 *****/
@@ -687,7 +843,7 @@ UINT WINAPI NetworkEngine::_RecvThread()
 					m_RecvUP31QueueMutex.unlock();
 					/***** m_RecvUPQueueMutex : 종료 *****/
 
-					printf("Pop >> NetworkEngine.cpp : UserPacket31 -> type = %d, id = %d, position = {%f %f %f}, rotation = {%f %f %f}\n",
+					printf("Pop >> NetworkEngine.cpp : UserPacket31 -> type = %d, id = %d, position = {%f %f %f}, rotation = {%f %f %f}, emotion = (%d, %d, %d, %d)\n",
 						tempUP->type,
 						tempUP->id,
 						tempUP->position[0],
@@ -695,7 +851,11 @@ UINT WINAPI NetworkEngine::_RecvThread()
 						tempUP->position[2],
 						tempUP->rotation[0],
 						tempUP->rotation[1],
-						tempUP->rotation[2]
+						tempUP->rotation[2],
+						tempUP->emotion[0],
+						tempUP->emotion[1],
+						tempUP->emotion[2],
+						tempUP->emotion[3]
 					);
 
 					/***** m_RecvUPQueueMutex : 시작 *****/
@@ -721,15 +881,15 @@ UINT WINAPI NetworkEngine::_RecvThread()
 					m_RecvMPQueueMutex.unlock();
 					/***** m_RecvMPQueueMutex : 종료 *****/
 
-					printf("Pop >> NetworkEngine.cpp : MonsterPacket -> type = %d, position = {%f %f %f}, rotation = {%f %f %f}\n",
-						tempMP->type,
-						tempMP->position[0],
-						tempMP->position[1],
-						tempMP->position[2],
-						tempMP->rotation[0],
-						tempMP->rotation[1],
-						tempMP->rotation[2]
-					);
+					//printf("Pop >> NetworkEngine.cpp : MonsterPacket -> type = %d, position = {%f %f %f}, rotation = {%f %f %f}\n",
+					//	tempMP->type,
+					//	tempMP->position[0],
+					//	tempMP->position[1],
+					//	tempMP->position[2],
+					//	tempMP->rotation[0],
+					//	tempMP->rotation[1],
+					//	tempMP->rotation[2]
+					//);
 
 					/***** m_RecvMPQueueMutex : 시작 *****/
 					m_RecvMPQueueMutex.lock();
@@ -741,7 +901,32 @@ UINT WINAPI NetworkEngine::_RecvThread()
 				offset += sizeof(MonsterPacket);
 				break;
 
-//			case 70:
+			case 100: // GameOverPacket
+				tempGOP = reinterpret_cast<GameOverPacket*>(buffer + offset);
+
+				/***** m_RecvGOPQueueMutex : 시작 *****/
+				m_RecvGOPQueueMutex.lock();
+
+				if (m_RecvGameOverPacketQueue->size() < QUEUE_LIMIT_SIZE)
+				{
+					m_RecvGameOverPacketQueue->push(*tempGOP);
+#ifdef _DEBUG
+					m_RecvGOPQueueMutex.unlock();
+					/***** m_RecvGOPQueueMutex : 종료 *****/
+
+					printf("GameOverPacket Recv!\n");
+
+					/***** m_RecvGOPQueueMutex : 시작 *****/
+					m_RecvGOPQueueMutex.lock();
+#endif
+				}
+				m_RecvGOPQueueMutex.unlock();
+				/***** m_RecvGOPQueueMutex : 종료 *****/
+
+				offset += sizeof(GameOverPacket);
+				break;
+
+//			case 40:
 //				tempOP = reinterpret_cast<ObejctPacket*>(buffer + offset);
 //
 //				/***** m_RecvOPQueueMutex : 시작 *****/
@@ -901,4 +1086,40 @@ std::mutex& NetworkEngine::GetSendOPQueueMutex()
 std::mutex& NetworkEngine::GetRecvOPQueueMutex()
 {
 	return m_RecvOPQueueMutex;
+}
+
+std::queue<Player2Player>* NetworkEngine::GetSendP2PQueue()
+{
+	return m_SendPlayer2PlayerQueue;
+}
+std::mutex& NetworkEngine::GetSendP2PQueueMutex()
+{
+	return m_SendP2PQueueMutex;
+}
+
+std::queue<Player2Monster>* NetworkEngine::GetSendP2MQueue()
+{
+	return m_SendPlayer2MonsterQueue;
+}
+std::mutex& NetworkEngine::GetSendP2MQueueMutex()
+{
+	return m_SendP2MQueueMutex;
+}
+
+std::queue<Player2Object>* NetworkEngine::GetSendP2OQueue()
+{
+	return m_SendPlayer2ObjectQueue;
+}
+std::mutex& NetworkEngine::GetSendP2OQueueMutex()
+{
+	return m_SendP2OQueueMutex;
+}
+
+std::queue<GameOverPacket>* NetworkEngine::GetRecvGOPQueue()
+{
+	return m_RecvGameOverPacketQueue;
+}
+std::mutex& NetworkEngine::GetRecvGOPQueueMutex()
+{
+	return m_RecvGOPQueueMutex;
 }

@@ -14,7 +14,7 @@ struct OBB
 	XMFLOAT3 m_Extent = XMFLOAT3(0.0f, 0.0f, 0.0f);
 };
 
-class CollisionDetection
+class CollisionDetection : public AlignedAllocationPolicy<16>
 {
 public:
 	CollisionDetection();

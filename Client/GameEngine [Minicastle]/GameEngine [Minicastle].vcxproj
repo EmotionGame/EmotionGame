@@ -166,11 +166,14 @@
     <ClInclude Include="dds.h" />
     <ClInclude Include="DelayLoadingShader.h" />
     <ClInclude Include="DirectXHelpers.h" />
+    <ClInclude Include="Emotion.h" />
+    <ClInclude Include="EmotionShader.h" />
     <ClInclude Include="Event.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="Line.h" />
     <ClInclude Include="LoaderHelpers.h" />
     <ClInclude Include="Monster.h" />
+    <ClInclude Include="Object.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PlatformHelpers.h" />
     <ClInclude Include="Player.h" />
@@ -213,10 +216,13 @@
     <ClCompile Include="CollisionDetection.cpp" />
     <ClCompile Include="ColorShader.cpp" />
     <ClCompile Include="DelayLoadingShader.cpp" />
+    <ClCompile Include="Emotion.cpp" />
+    <ClCompile Include="EmotionShader.cpp" />
     <ClCompile Include="Event.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="Line.cpp" />
     <ClCompile Include="Monster.cpp" />
+    <ClCompile Include="Object.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="QuadTree.cpp" />
     <ClCompile Include="TerrainShader.cpp" />
@@ -305,6 +311,14 @@
       <FileType>Document</FileType>
     </None>
     <None Include="HLSL\Color_vs.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="HLSL\Emotion_ps.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="HLSL\Emotion_vs.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

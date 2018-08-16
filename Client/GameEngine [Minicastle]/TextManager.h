@@ -12,13 +12,15 @@ public:
 
 	bool Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext, HWND hwnd, int screenWidth, int screenHeight, XMMATRIX baseViewMatrix);
 	void Shutdown();
-	bool Frame(ID3D11DeviceContext* pDeviceContext, HID* pHID, int cputPercentage, int fps, float deltaTime, float averageDeltaTime, int playerID, int TerrainPolygonCount);
+	bool Frame(ID3D11DeviceContext* pDeviceContext, HID* pHID, int cputPercentage, int fps, float deltaTime, float averageDeltaTime, int playerID, int TerrainPolygonCount,
+		int hp, float speed, int emotion[4]);
 	bool Render(ID3D11DeviceContext* pDeviceContext, XMMATRIX worldMatrix, XMMATRIX orthoMatrix);
 
 private:
 	HWND m_hwnd;
 	
 	std::vector<Text*>* m_InfoTexts = new std::vector<Text*>;
-
 	bool m_InfoRenderFlag = false;
+
+	std::vector<Text*>* m_UITexts = new std::vector<Text*>;
 };

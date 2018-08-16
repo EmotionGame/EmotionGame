@@ -23,6 +23,7 @@ public:
 
 	bool InitializeBuffers(ID3D11Device* pDevice, XMFLOAT3 vertex[8], XMFLOAT4 color);
 
+	bool UpdateBuffers(ID3D11DeviceContext* pDeviceContext, XMFLOAT3 vertex[8], XMFLOAT4 color);
 private:
 	void ShutdownBuffers();
 	void RenderBuffers(ID3D11DeviceContext* pDeviceContext);
@@ -30,8 +31,8 @@ private:
 private:
 	HWND m_hwnd;
 
-	ID3D11Buffer* m_VertexBuffer;
-	ID3D11Buffer* m_IndexBuffer;
+	ID3D11Buffer* m_VertexBuffer = nullptr;
+	ID3D11Buffer* m_IndexBuffer = nullptr;
 
 	ColorShader m_ColorShader;
 };

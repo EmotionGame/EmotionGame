@@ -168,7 +168,7 @@ void Camera::MoveCameraPositionToLookAtSide(float x, float y, float z)
 }
 
 void Camera::Navigation(HID* pHID, float deltaTime) {
-	if (pHID->GetMouse_Keyboard()->IsKeyRelease(DIK_F1))
+	if (pHID->GetMouse_Keyboard()->IsKeyRelease(DIK_F6))
 	{
 		if (m_Navigation)
 			m_Navigation = false;
@@ -198,4 +198,9 @@ void Camera::Navigation(HID* pHID, float deltaTime) {
 		if (pHID->GetMouse_Keyboard()->IsKeyDown(DIK_D))
 			MoveCameraPositionToLookAtSide(-moveSpeed, -moveSpeed, -moveSpeed);
 	}
+}
+
+XMFLOAT3 Camera::GetLookAt()
+{
+	return m_lookAt;
 }

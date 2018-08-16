@@ -5,16 +5,18 @@ class Model;
 class Monster : public Model
 {
 public:
-	void SetSpeed(int speed);
+	void PlayerAnimation(float deltaTime);
+
+	void SetSpeed(float speed);
 	void SetEmotion(int* emotion);
 	void SetDamage(int damage);
 
-	int GetSpeed();
+	float GetSpeed();
 	int* GetEmotion();
 	int GetDamage();
 
 private:
-	int m_Speed = 10;
+	float m_Speed = 10.0f;
 	int m_Emotion[4] = { 0, 0, 0, 0 };
 	int m_Damage = 20;
 };

@@ -99,6 +99,8 @@ public:
 
 	bool IsDelayLoadingInitilized();
 
+	bool m_FPS = true;
+
 protected:
 	HWND m_hwnd;
 
@@ -119,7 +121,6 @@ protected:
 	Texture m_DelayLoadingTexture;
 
 	int m_CollisionType = AxisAlignedBoundingBox;
-
 /********** 지연 로딩 : 종료 **********/
 
 
@@ -135,10 +136,11 @@ public:
 
 	void SetPosition(XMFLOAT3 position);
 	XMFLOAT3 GetPosition();
-	void SetRotation(XMFLOAT3 position);
+	void SetRotation(XMFLOAT3 rotation);
 	XMFLOAT3 GetRotation();
 	void CalculateCameraPosition();
 	XMFLOAT3 GetCameraPosition();
+	void SetScale(XMFLOAT3 scale);
 
 	void SetActive(bool active);
 	bool GetActive();
@@ -146,6 +148,11 @@ public:
 
 	bool Intersection(Model& rOther);
 	void InitCollisionCheck();
+	void GetBBVertex(unsigned int meshIndex, XMFLOAT3 vertex[8]);
+	unsigned int GetMeshCount();
+	XMMATRIX GetWorldMatrixBB(unsigned int meshIndex);
+
+	bool m_FirstRender = false;
 
 protected:
 	bool LoadModel(char* pFileName);
@@ -239,7 +246,7 @@ protected:
 	XMFLOAT4 m_DiffuseColor[MATERIAL_SIZE];
 	XMFLOAT4 m_SpecularPower[MATERIAL_SIZE];
 	XMFLOAT4 m_SpecularColor[MATERIAL_SIZE];
-	XMFLOAT3 m_LightDirection = XMFLOAT3(-1.0f, -1.0f, 1.0f);
+	XMFLOAT3 m_LightDirection = XMFLOAT3(-1.0f, -1.0f, -1.0f);
 	/***** Material 관리 : 종료 *****/
 
 	std::mutex m_InitMutex;

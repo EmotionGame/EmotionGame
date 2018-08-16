@@ -33,6 +33,7 @@ public:
 	bool SetSentenceWithSTR(char* pFrontSentence, char* pData, char* pBackSentence, ID3D11DeviceContext* pDeviceContext);
 	bool SetSentenceWithINT(char* pFrontSentence, int pData, char* pBackSentence, ID3D11DeviceContext* pDeviceContext);
 	bool SetSentenceWithFLOAT(char* pFrontSentence, float pData, char* pBackSentence, ID3D11DeviceContext* pDeviceContext);
+	bool SetSentenceWithINT4(char* pFrontSentence, int pData[4], char* pBackSentence, ID3D11DeviceContext* pDeviceContext);
 
 private:
 	bool InitializeSentence(SentenceType** ppSentence, int maxLength, ID3D11Device* pDevice);

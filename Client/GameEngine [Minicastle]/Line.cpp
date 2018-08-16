@@ -110,10 +110,10 @@ bool Line::InitializeBuffers(ID3D11Device* pDevice, XMFLOAT3 vertex[8], XMFLOAT4
 
 	// 정적 정점 버퍼의 구조체를 설정합니다.
 	D3D11_BUFFER_DESC vertexBufferDesc;
-	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	vertexBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	vertexBufferDesc.ByteWidth = sizeof(LineVertex) * 8;
 	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.CPUAccessFlags = 0;
+	vertexBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	vertexBufferDesc.MiscFlags = 0;
 	vertexBufferDesc.StructureByteStride = 0;
 
@@ -158,6 +158,38 @@ bool Line::InitializeBuffers(ID3D11Device* pDevice, XMFLOAT3 vertex[8], XMFLOAT4
 
 	delete[] indices;
 	indices = nullptr;
+
+	return true;
+}
+
+bool Line::UpdateBuffers(ID3D11DeviceContext* pDeviceContext, XMFLOAT3 vertex[8], XMFLOAT4 color)
+{
+	LineVertex* vertices = new LineVertex[8];
+	for (int i = 0; i < 8; i++)
+	{
+		vertices[i].position = vertex[i];
+		vertices[i].color = color;
+	}
+
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+
+	// Lock the vertex buffer so it can be written to.
+	if (FAILED(pDeviceContext->Map(m_VertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource)))
+	{
+		return false;
+	}
+
+
+	// Copy the data into the vertex buffer.
+	memcpy((LineVertex*)mappedResource.pData, (void*)vertices, (sizeof(LineVertex) * 8));
+
+	// Unlock the vertex buffer.
+	pDeviceContext->Unmap(m_VertexBuffer, 0);
+
+
+	// 생성되고 값이 할당된 정점 버퍼와 인덱스 버퍼를 해제합니다.
+	delete[] vertices;
+	vertices = nullptr;
 
 	return true;
 }

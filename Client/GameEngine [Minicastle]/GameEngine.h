@@ -67,7 +67,7 @@ private:
 	LPCWSTR m_applicationName;
 	HINSTANCE m_hinstance;
 
-	unsigned int m_screenWidth = 800; // 1600
+	unsigned int m_screenWidth = 930; // 1600
 	unsigned int m_screenHeight = 600; // 900
 
 #define FRAME_THREAD_SIZE 4

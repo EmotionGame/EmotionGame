@@ -135,7 +135,7 @@ bool RenderingEngine::Initialize(HWND hwnd, int screenWidth, int screenHeight)
 	}
 
 	// 카메라 포지션 설정
-	m_Camera->SetPosition(0.0f, 0.0f, -1.0f);
+	m_Camera->SetPosition(-2.0f, 0.0f, -5.0f);
 
 	// 초기화
 	m_Camera->Render();
@@ -144,7 +144,7 @@ bool RenderingEngine::Initialize(HWND hwnd, int screenWidth, int screenHeight)
 	m_Camera->GetViewMatrix(m_baseViewMatrix);
 
 	// ModelManager 객체 초기화
-	if (!m_ModelManager->Initialize(m_Direct3D->GetDevice(), m_hwnd))
+	if (!m_ModelManager->Initialize(m_Direct3D->GetDevice(), m_hwnd, screenWidth, screenHeight))
 	{
 		MessageBox(m_hwnd, L"RenderingEngine.cpp : m_ModelManager->Initialize(m_Direct3D->GetDevice(), m_hwnd)", L"Error", MB_OK);
 		return false;
@@ -178,7 +178,7 @@ bool RenderingEngine::Initialize(HWND hwnd, int screenWidth, int screenHeight)
 		return false;
 	}
 
-	if (!m_Terrain->Initialize(m_Direct3D->GetDevice(), "Data/Terrain/heightmap03.bmp", L"Data/Terrain/dirt01.dds"))
+	if (!m_Terrain->Initialize(m_Direct3D->GetDevice(), "Data/Terrain/heightmap07.bmp", L"Data/Terrain/dirt01.dds"))
 	{
 		MessageBox(m_hwnd, L"RenderingEngine.cpp : m_Terrain->Initialize", L"Error", MB_OK);
 		return false;
@@ -288,7 +288,7 @@ void RenderingEngine::Shutdown()
 	}
 }
 
-bool RenderingEngine::Frame(HID* pHID, int cputPercentage, float deltaTime)
+bool RenderingEngine::Frame(HID* pHID, int cputPercentage, float deltaTime, int screenWidth, int screenHeight)
 {
 	// 평균 델타 타임 구하는 함수
 	CaluateAverageDeltaTime(deltaTime);
@@ -299,7 +299,8 @@ bool RenderingEngine::Frame(HID* pHID, int cputPercentage, float deltaTime)
 		return false;
 	}
 
-	if (!m_TextManager->Frame(m_Direct3D->GetDeviceContext(), pHID, cputPercentage, m_FPS->GetFps(), deltaTime, m_averageDeltaTime, m_ModelManager->GetPlayerID(), m_QuadTree->GetDrawCount()))
+	if (!m_TextManager->Frame(m_Direct3D->GetDeviceContext(), pHID, cputPercentage, m_FPS->GetFps(), deltaTime, m_averageDeltaTime, m_ModelManager->GetPlayerID(), m_QuadTree->GetDrawCount(),
+		m_ModelManager->GetPlayerHP(), m_ModelManager->GetPlayerSpeed(), m_ModelManager->GetPlayerEmotion()))
 	{
 		MessageBox(m_hwnd, L"RenderingEngine.cpp : m_TextManager->Frame(m_Direct3D->GetDeviceContext(), cputPercentage, fps, deltaTime, averageDeltaTime)", L"Error", MB_OK);
 		return false;
@@ -312,7 +313,7 @@ bool RenderingEngine::Frame(HID* pHID, int cputPercentage, float deltaTime)
 	}
 
 	// 그래픽 랜더링 처리
-	if (!Render(deltaTime))
+	if (!Render(deltaTime, screenWidth, screenHeight))
 	{
 		MessageBox(m_hwnd, L"RenderingEngine.cpp : Render(deltaTime)", L"Error", MB_OK);
 		return false;
@@ -321,14 +322,14 @@ bool RenderingEngine::Frame(HID* pHID, int cputPercentage, float deltaTime)
 	return true;
 }
 
-bool RenderingEngine::Physics(HID* pHID, NetworkEngine* pNetworkEngine, float deltaTime)
+bool RenderingEngine::Physics(HID* pHID, NetworkEngine* pNetworkEngine, float deltaTime, int screenWidth, int screenHeight)
 {
-	m_ModelManager->Physics(pHID, pNetworkEngine, m_Camera, m_QuadTree, deltaTime);
+	m_ModelManager->Physics(m_Direct3D, pHID, pNetworkEngine, m_Camera, m_QuadTree, deltaTime, screenWidth, screenHeight);
 
 	return true;
 }
 
-bool RenderingEngine::Render(float deltaTime)
+bool RenderingEngine::Render(float deltaTime, int screenWidth, int screenHeight)
 {
 	// 씬을 그리기 위해 버퍼를 지웁니다
 	m_Direct3D->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
@@ -381,7 +382,7 @@ bool RenderingEngine::Render(float deltaTime)
 
 
 	/***** 모델 렌더링 : 시작 *****/	
-	m_ModelManager->Render(m_Direct3D, m_Direct3D->GetDeviceContext(), viewMatrix, projectionMatrix, m_Camera->GetPosition(), deltaTime); // 모델 매니저로부터 모델들을 렌더링합니다.
+	m_ModelManager->Render(m_Direct3D, m_Direct3D->GetDeviceContext(), viewMatrix, projectionMatrix, m_baseViewMatrix, orthoMatrix, m_Camera->GetPosition(), deltaTime, screenWidth, screenHeight); // 모델 매니저로부터 모델들을 렌더링합니다.
 	/***** 모델 렌더링 : 종료 *****/
 
 
