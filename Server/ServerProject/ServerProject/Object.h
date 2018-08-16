@@ -3,7 +3,7 @@
 #include <random>
 #include <time.h>
 #include <mutex>
-
+#include <iostream>
 #include "Deflag.h"
 using namespace std;
 class Object {
@@ -11,26 +11,23 @@ public:
 	Object();
 	~Object();
 
-	void injectEmo(int index, int emotion[4]);
+	void start();
+
+	bool validation(int i, float pos[3], bool collision);
+	char* getObject(int index);
+	void setEmotion(int index, int emotion[4]);
 	void damaged(int index, int dmg);
 	// 어떤 감정이 수치가 제일 높은지 return
-	int getEffect(int index)
-	{
-		int pos = 0;
-		int value = 0;
-		for (int i = 0; i < 4; i++) {
-			if (objects[index].emotion[i] > value) {
-				pos = i + 1;
-				value = objects[index].emotion[i];
-			}
-		}
-		return pos;
-	}
-
+	void setScale(int index, bool flag);
+	int effect(int index);
+	bool getScaleChanged(int i);
+	void updatedScale(int i);
 	void update();
 private:
-	clock_t tic=clock(), tok;
+	clock_t tic = clock(), cooltime = clock();
 	float randomValue();
-	vector<ObjectPacket>objects;
+	// 1: 울타리, 2: 움막
+	vector<pair<int, ObjectPacket>>objects;
+	bool changed[2];
 	mutex _lock;
 };

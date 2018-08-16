@@ -7,6 +7,7 @@
 #include <tbb\concurrent_queue.h>
 #include <mutex>
 #include <deque>
+#include <random>
 
 #include "Deflag.h"
 
@@ -23,8 +24,8 @@ public:
 	~UserManager();
 
 	int enterUser(SOCKET sock);
-	bool exitUser(SOCKET sock, int index);
-
+	bool exitUser(int index);
+	void start();
 	bool setUserInfo(int index, char* data);
 	char* getUserInfo(int index);
 
@@ -34,15 +35,21 @@ public:
 	void setUserEmotion(int index, int emotion[4]);
 	void setUserHp(int index, int dmg);
 
+	void update();
+
 	bool setJob(int index, char* data);
 	char* getJob(int index);
+
+	void effect(int index, int current_emotion);
 
 	bool alive(int index);
 
 	int size();
 private:
+	int randomValue(clock_t time);
 	int userCount;
 	std::vector<pair<SOCKET, Client*>>users;
+	clock_t cooltime = clock();
 	mutex g_mutex;
 	mutex c_mutex[USERSIZE];
 };

@@ -13,15 +13,12 @@
 #include <queue>
 #include <mutex>
 #include <atomic>
-//#include <tbb/concurrent_queue.h>
 
 #include "Deflag.h"
 #include "UserManager.h"
 #include "EventManager.h"
 #include "Object.h"
 #include "MonsterManager.h"
-//#include "Terrain.h"
-//#include "QuadTree.h"
 
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib,"mswsock.lib")
@@ -50,6 +47,8 @@ public:
 	bool setPool();
 	void cleanUp();
 
+	void gameEnd();
+
 	bool setSocket();
 	// static - _beginthreadex() 함수의 인자 때문, _completionThread() 호출 후 completionThread() 맴버 함수 호출
 	static unsigned int __stdcall _completionThread(void *p_this);
@@ -58,6 +57,8 @@ public:
 	// Send to All Users, Data-Type and char*
 	void broadcastSend(int type, int i) {
 		for (auto iter = users.begin(); iter != users.end(); iter++) {
+			if (iter->second == -1)
+				continue;
 			LPER_IO_DATA ov = new PER_IO_DATA();
 			memset(&(ov->overlapped), 0, sizeof(OVERLAPPED));
 			memset(&(ov->buffer), 0, BUFSIZE);
@@ -75,7 +76,6 @@ public:
 				char* user_update_data = _userManager->getUserInfo(i);
 				User* user_data = reinterpret_cast<User*>(user_update_data);
 				user_data->type = USER_UPDATE_PACKET;
-				//memcpy(ov->buffer, user_data, sizeof(User));
 				ov->wsaBuf.len = sizeof(User);
 				ov->wsaBuf.buf = (char*)user_data;
 				WSASend(iter->first, &ov->wsaBuf, 1, &dwSend, 0, &ov->overlapped, NULL);
@@ -84,6 +84,16 @@ public:
 				char* data = _monsterManager->getMonsterInfo();
 				ov->wsaBuf.len = sizeof(Monster);
 				ov->wsaBuf.buf = (char*)data;
+				WSASend(iter->first, &ov->wsaBuf, 1, &dwSend, 0, &ov->overlapped, NULL);
+			}
+			else if (type == GAMEOVER) {
+				GameoverPacket* gameover = new GameoverPacket();
+				if (i == 0 && iter->second / 2 == 0)
+					gameover->winner = true;
+				else if (i == 1 && iter->second / 2 == 1)
+					gameover->winner = true;
+				ov->wsaBuf.len = sizeof(GameoverPacket);
+				ov->wsaBuf.buf = (char*)gameover;
 				WSASend(iter->first, &ov->wsaBuf, 1, &dwSend, 0, &ov->overlapped, NULL);
 			}
 		}
@@ -95,12 +105,11 @@ protected:
 	vector<User*> userInfo;
 	// API
 	LPFN_ACCEPTEX lpfnAcceptEx;
-	// 확인용 mutex
 
 	bool gameStart = false;
 	// Fixed Event Object
 	bool gameSetting = false;
-	
+
 	EventManager* _eventManager = NULL;
 	UserManager* _userManager = NULL;
 	Object* _object = NULL;
@@ -108,12 +117,14 @@ protected:
 
 	clock_t tic;
 	// Monster 주기
-	clock_t tok, tek=clock();
-
+	clock_t tok=clock(), tek = clock();
+	mutex g_lock;
 	atomic<bool> eventFlag = true;
 	atomic<bool> MonsterFlag = true;
-	//Terrain* m_Terrain = nullptr;
-	//QuadTree* m_QuadTree = nullptr;
+	atomic<bool> secFlag = true;
+	atomic<bool> userOutFlag = true;
+
+	bool gameover = false;
 private:
 	SOCKET mServerSock;
 	SOCKADDR_IN mServerSockAddr;

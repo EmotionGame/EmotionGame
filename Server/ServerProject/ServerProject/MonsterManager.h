@@ -4,11 +4,13 @@
 #include <utility>
 #include<tbb/concurrent_queue.h>
 #include <math.h>
+#include <limits>
+
 #include "Deflag.h"
 #include "UserManager.h"
 
-
 #define ATK_SPEED 2000
+#define MAXDISTANCE sqrt(256*256 + 256*256)
 
 using namespace std;
 
@@ -19,7 +21,7 @@ public:
 	~MonsterManager();
 
 	char* getMonsterInfo();
-	void injectEmo(int emotion[4]);
+	void setEmotion(int emotion[4]);
 	// 최대 감정 return
 	int getEmotion();
 	int getDmg();
@@ -28,19 +30,26 @@ public:
 	char* getJob();
 	void upDate();
 
+	bool validate(int i, float pos[3], bool collision);
+
 	void start();
 	bool getStart();
-private:
+
 	void setEmostate(int type);
 	void setDirection(int userIndex, float distance);
+	void setMonsterState(int emo, int new_emo);
 
+private:
 	Monster _monster;
 	tbb::concurrent_queue<char*> monsterQueue_;
 	// 0: non 1:2: 3:4
-	int _emotion = 3;
+	int _emotion = 0;
 	UserManager* _userManager = NULL;
-	bool flag = false;
+	vector<bool> targets;
+	bool atked = false;
+	bool flag = false; // start getstart
+	bool infoChanged = false;
 	clock_t tic;
-	clock_t emoTic = clock();
+	clock_t emoTic;
 	mutex _lock;
 };

@@ -16,37 +16,10 @@ IOCPServer::IOCPServer()
 	_eventManager = new EventManager();
 	_object = new Object();
 	_monsterManager = new MonsterManager(_userManager);
-	/*
-	m_Terrain = new Terrain;
-	m_QuadTree = new QuadTree;
-
-	m_Terrain->Initialize("Terrain/heightmap01.bmp");
-
-	m_QuadTree->Initialize(m_Terrain);
-
-	m_QuadTree->GetHeightAtPosition(x, z, y);
-	*/
 }
 
 IOCPServer::~IOCPServer()
 {
-	/*
-	if (m_QuadTree)
-	{
-		m_QuadTree->Shutdown();
-		delete m_QuadTree;
-		m_QuadTree = 0;
-	}
-
-	if (m_Terrain)
-	{
-		m_Terrain->Shutdown();
-		delete m_Terrain;
-		m_Terrain = 0;
-	}
-
-	*/
-	
 	closesocket(mServerSock);
 	WSACleanup();
 }
@@ -54,6 +27,14 @@ IOCPServer::~IOCPServer()
 void IOCPServer::cleanUp()
 {
 	// PQCS
+}
+void IOCPServer::gameEnd()
+{
+	delete _object;
+	delete _monsterManager;
+	delete _eventManager;
+	delete _userManager;
+	return;
 }
 bool IOCPServer::init()
 {
@@ -173,15 +154,18 @@ UINT WINAPI IOCPServer::completionThread()
 	// For Disconnect
 	SOCKADDR* lpaddr = NULL, *lpremote = NULL;
 	int lplen = 0, lprelen = 0;
-	LPFN_GETACCEPTEXSOCKADDRS lpfnGetAcceptExSockaddrs = NULL;
-	LPFN_DISCONNECTEX lpfnDisconnectEx = NULL;
-	GUID GuidDisconnect = WSAID_DISCONNECTEX;
 	DWORD bytes;
+	GUID GuidDisconnect = WSAID_DISCONNECTEX;
+	LPFN_DISCONNECTEX lpfnDisconnectEx = NULL;
+	LPFN_GETACCEPTEXSOCKADDRS lpfnGetAcceptExSockaddrs = NULL;
 
 	vector<int> jobQueue;
-	
+
 	bool eventExpected = true;
 	bool monsterExpected = true;
+	bool oneSecExpected = true;
+	bool userOutExpected = true;
+
 	while (TRUE)
 	{
 		timeout = GetQueuedCompletionStatus(hCompletionPort, &dwBytesTransferred,
@@ -190,7 +174,6 @@ UINT WINAPI IOCPServer::completionThread()
 			// Data 수신
 			if (pHandleData == NULL) {
 				cout << "pHandleData = NULL";
-				exit(1);
 			}
 			// CK - FLAG
 			switch ((int)pHandleData)
@@ -222,6 +205,7 @@ UINT WINAPI IOCPServer::completionThread()
 						jobQueue.push_back(id);
 					}
 				}
+
 				memset(&(pIoData->overlapped), 0, sizeof(OVERLAPPED));
 				memset(&(pIoData->buffer), 0, BUFSIZE);
 				pIoData->wsaBuf.len = BUFSIZE;
@@ -230,20 +214,22 @@ UINT WINAPI IOCPServer::completionThread()
 				pIoData->sock = pHandleData->sock;
 				dwFlag = 0;
 				WSARecv(pHandleData->sock, &(pIoData->wsaBuf), 1, NULL, &dwFlag, &(pIoData->overlapped), NULL);
-				
+
 				count++;
 				cout << "----------------------CURRENT USER COUNT  " << count << "   ----------------------" << endl;
 				if (count == USERSIZE) {
 					gameStart = true;
 					tic = clock();
 					if (!gameSetting) {
-						for (int i = 3; i <= 5; i++) 
+						for (int i = 3; i <= 5; i++)
 							broadcastSend(EVENT_PACKET, i);
 						gameSetting = true;
 					}
+					//_userManager->start();
 					_monsterManager->start();
 					broadcastSend(MONSTER_PACKET, 0);
 				}
+				
 				// 초기 접속 시 바로 자신의 아이디 전달
 				pIoData = new PER_IO_DATA();
 				memset(&(pIoData->overlapped), 0, sizeof(OVERLAPPED));
@@ -260,31 +246,9 @@ UINT WINAPI IOCPServer::completionThread()
 				// Thread 종료
 				continue;
 			}
-
 			// 0 Byte인데 Disconnect 함수 호출 전 - 후
-			if (dwBytesTransferred == 0 && pIoData->operationType != DISCONNECT) {
-				cout << "0BYTE - Disconnect" << endl;
-				// Load Disconnect
-				WSAIoctl(pHandleData->sock, SIO_GET_EXTENSION_FUNCTION_POINTER,
-					&GuidDisconnect, sizeof(GuidDisconnect),
-					&lpfnDisconnectEx, sizeof(lpfnDisconnectEx),
-					&bytes, NULL, NULL
-				);
-				memset(&(pIoData->overlapped), 0, sizeof(OVERLAPPED));
-				pIoData->operationType = DISCONNECT;
-				pIoData->sock = pHandleData->sock;
-				if (lpfnDisconnectEx(pIoData->sock, &pIoData->overlapped, TF_REUSE_SOCKET, 0) == false) {
-					if (GetLastError() != ERROR_IO_PENDING) {
-						// 후처리 필요
-						ErrorHandling("Disconnect Error");
-					}
-				}
-				break;
-			}
-			else if (pIoData->operationType == DISCONNECT) {
+			if (dwBytesTransferred == 0 && pIoData->operationType == DISCONNECT) {
 				cout << "pIoData->operationType : ACCEPTEX" << endl;
-				// 소켓은 재사용 가능하게 해제되었고 Overlapped만 Disconnect 상태
-				// 소켓 재사용 및 AcceptEx 사용
 				// Overlapped 초기화
 				//users.erase(pIoData->sock);
 				//_userManager->exitUser(pIoData->sock, users[pIoData->sock]);
@@ -300,10 +264,10 @@ UINT WINAPI IOCPServer::completionThread()
 					sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
 					&bytes, &(pIoData->overlapped)
 				);
-				//cout << "접속한 유저 수 : " << users.size() << endl;
+				count--;
 				continue;
 			}
-
+			
 			int offset = 0;
 			// Network - Job - Event
 			while (dwBytesTransferred - offset > 0)
@@ -318,10 +282,8 @@ UINT WINAPI IOCPServer::completionThread()
 					case ACTION_PACKET:
 					{
 						ActionPacket* action = reinterpret_cast<ActionPacket*>(&pIoData->buffer[offset]);
-						//cout << "Action Packet Recv" << endl;
-						//cout << pHandleData->sock << endl;
-						//cout << action->id << endl;
-						//cout << action->position[0] << action->position[1] << action->position[2] << endl;
+						cout << "ACTION PACKET>>"<<action->id << endl;
+						cout << action->position[0] << action->position[1] << action->position[2] << endl;
 						//cout << action->rotation[0] << action->rotation[1] << action->rotation[2] << endl;
 						_userManager->setUserPos(users[pHandleData->sock], (char*)action);
 						// 자신 외 유저 JobBuf에 추가
@@ -343,9 +305,100 @@ UINT WINAPI IOCPServer::completionThread()
 						offset += sizeof(EventPacket);
 						break;
 					}
-					case USER_VIEW:
-						// 유저가 바라보는 것 & 감정상태
+					case USER_EVENT_PACKET:
+					{
+						// 유저가 이벤트를 먹음
+						cout << "USER_EVENT_PACKET>>";
+						UserEventPacket* getEvent = reinterpret_cast<UserEventPacket*>(&pIoData->buffer[offset]);
+						cout << getEvent->eventId << endl;
+						if (_eventManager->validate(getEvent->eventId, getEvent->pos, true)) {
+							if (getEvent->eventId == 1 || getEvent->eventId == 2 || getEvent->eventId == 7 || getEvent->eventId == 8) {
+								cout << "RAMDOM EVENT PACKET" << endl;
+								_eventManager->updateEvent(getEvent->eventId, clock());
+								int index = getEvent->eventId;
+								if (index > 5)
+									index--;
+								broadcastSend(EVENT_PACKET, index);
+							}
+							int* emotion = _eventManager->getEmotion(getEvent->eventId);
+							// 이벤트에 맞는 유저&감정 갱신
+							_userManager->setUserEmotion(users[getEvent->userId], emotion);
+
+							for (auto iter = users.begin(); iter != users.end(); iter++) {
+								_userManager->setJob(iter->second, _userManager->getUserInfo(users[getEvent->userId]));
+								jobQueue.push_back(iter->second);
+							}
+						}
+						offset += sizeof(UserEventPacket);
 						break;
+					}
+					case USER_MONSTER_PACKET:
+					{
+						cout << "USER_MONSTER_PACKET" << endl;
+						UserMonsterPacket* collisionMonster = reinterpret_cast<UserMonsterPacket*>(&pIoData->buffer[offset]);
+						cout << "CollisionMonster>>PlayerID>>" << collisionMonster->playerId << endl;
+						_monsterManager->validate(users[collisionMonster->playerId], collisionMonster->position, collisionMonster->collision);
+						offset += sizeof(UserMonsterPacket);
+						break;
+					}
+
+					case USER_OBJECT_PACKET:
+					{
+						// 유저가 오브젝트와 충돌
+						cout << "USER_OBJECT_PACKET" << endl;
+						UserObjectPacket* collisionObject = reinterpret_cast<UserObjectPacket*>(&pIoData->buffer[offset]);
+						if (_object->validation(collisionObject->objectId, collisionObject->position, collisionObject->collision)) {
+							int objectEvent = _object->effect(collisionObject->objectId);
+							if (objectEvent == 1) {
+								_userManager->setUserHp(users[collisionObject->playerId], -3);
+								_userManager->setJob(users[collisionObject->playerId], _userManager->getUserInfo(users[collisionObject->playerId]));
+								jobQueue.push_back(users[collisionObject->playerId]);
+							}
+							else if (objectEvent == 2) {
+								char* data = NULL;
+								//_userManager->setUserHp(users[collisionObject->playerId], -3);
+								_userManager->setJob(users[collisionObject->playerId], _userManager->getUserInfo(users[collisionObject->playerId]));
+								jobQueue.push_back(users[collisionObject->playerId]);
+							}
+						}
+						offset += sizeof(UserObjectPacket);
+					}
+					case VIEW_PLAYER:
+					{
+						cout << "VIEW_PLAYER>>" << endl;
+						Player2Player* pTplayer= reinterpret_cast<Player2Player*>(&pIoData->buffer[offset]);
+						_userManager->setUserEmotion(pTplayer->player2Id, pTplayer->emotion);
+						int decrease[4] = { 0, 0, 0, 0 };
+						for (int i = 0; i < 4; i++)
+							if (pTplayer->emotion[i] != 0)
+								decrease[i] = pTplayer->emotion[i] * -1;
+						_userManager->setUserEmotion(pTplayer->player1Id, decrease);
+						
+						_userManager->setJob(users[pTplayer->player1Id], _userManager->getUserInfo(users[pTplayer->player1Id]));
+						jobQueue.push_back(users[pTplayer->player1Id]);
+						_userManager->setJob(users[pTplayer->player2Id], _userManager->getUserInfo(users[pTplayer->player2Id]));
+						jobQueue.push_back(users[pTplayer->player2Id]);
+
+
+						offset += sizeof(Player2Player);
+						break;
+					}
+					case VIEW_MONSTER:
+					{
+						cout << "VIEW_MONSTER>>" << endl;
+						Player2Monster* pTmonster = reinterpret_cast<Player2Monster*>(&pIoData->buffer[offset]);
+						_monsterManager->setEmotion(pTmonster->emotion);
+						offset += sizeof(Player2Monster);
+						break;
+					}
+					case VIEW_OBJECT:
+					{
+						cout << "VIEW_OBJECT>>" << endl;
+						Player2Object* pTobject = reinterpret_cast<Player2Object*>(&pIoData->buffer[offset]);
+						_object->setEmotion(pTobject->objectId, pTobject->emotion);
+						offset += sizeof(Player2Object);
+						break;
+					}
 					}
 					break;
 				}
@@ -386,86 +439,55 @@ UINT WINAPI IOCPServer::completionThread()
 						else if (*type == MONSTER_PACKET)
 							ov->wsaBuf.len = sizeof(Monster);
 						ov->wsaBuf.buf = data;
+						cout << "JOBQUEUE>>SEND>>" << sock << endl;
 						WSASend(sock, &ov->wsaBuf, 1, &dwSend, 0, &ov->overlapped, NULL);
 					}
 				}
 
 				//Event
-				if (gameStart) {
-					time_t toc = clock() - tic;
-					if (eventFlag.compare_exchange_weak(eventExpected, false) && !eventFlag) {
-						for (int i = 0; i < _eventManager->size(); i++) {
-							if (toc >= _eventManager->getEventTime(i)) {
-								// 이벤트 실행
-								// 랜덤은 유저 전체에게 전달
-								// user - overlapped
-								switch (i)
-								{
-								case 0:
-									//monster
-									break;
-								case 1:case 2:case 6:case 7:
-								{
-									broadcastSend(EVENT_PACKET, i);
-									_eventManager->updateEvent(i, clock());
-									cout << "Event 발생>>" << i << endl;
-									break;
-								}
-								case 3:case 4:case 5:
-									// 1초만 올립니다
-									_eventManager->updateEvent(i, clock());
-									break;
-								case 9:
-									_eventManager->updateEvent(i, clock());
-								} // random 생성 & 삭제
-								  // 해당 이벤트에 유저가 접근해 있는가
-								for (auto iter = users.begin(); iter != users.end(); iter++) {
-									// userInEvent -> state가 true인지 false인지도 확인해서 return
-									if (_eventManager->userInEvent(i, _userManager->getUserPos(iter->second))) {
-										// 유저가 해당 이벤트(i) 내
-										// 출력용
-										EventPacket* p = reinterpret_cast<EventPacket*>(_eventManager->getEvent(i));
-										cout << "Event 습득>>" << endl;
-										cout << p->id << endl;
-										cout << p->position[0] << p->position[1] << p->position[2] << endl;
-										cout << p->state << endl;
-										cout << iter->first << endl;;
-
-										if (i == 1 || i == 2) {
-											int emo[4] = { 20, 0, 0, 0 };
-											_userManager->setUserEmotion(iter->second, emo);
-											_eventManager->updateEvent(i, clock());
-											broadcastSend(USER_UPDATE_PACKET, iter->second);
-										}
-										else if (i == 3 || i == 4) {
-											int emo[4] = { 0, 3, 0, 0 };
-											_userManager->setUserEmotion(iter->second, emo);
-											broadcastSend(USER_UPDATE_PACKET, iter->second);
-										}
-										else if (i == 5) {
-											int emo[4] = { 0, 0, 3, 0 };
-											_userManager->setUserEmotion(iter->second, emo);
-											broadcastSend(USER_UPDATE_PACKET, iter->second);
-										}
-										else if (i == 6 || i == 7) {
-											int emo[4] = { 0, 0, 0, 20 };
-											_userManager->setUserEmotion(iter->second, emo);
-											_eventManager->updateEvent(i, clock());
-											broadcastSend(USER_UPDATE_PACKET, iter->second);
-										}
-									}// if user in Event
-								}// for users
-							}// if 이벤트 발생
-						} // for:모든 이벤트 확인
-						eventFlag = true;
-					} // 이벤트 접근
-					else
-						eventExpected = true;// atomic event
-				} // gamestart-event
+				if (gameStart && eventFlag.compare_exchange_weak(eventExpected, false) && !eventFlag) {
+					for (int i = 0; i < _eventManager->size(); i++) {
+						if (clock() - tic >= _eventManager->getEventTime(i)) {
+							// 이벤트 실행
+							// 랜덤은 유저 전체에게 전달
+							switch (i)
+							{
+							case 0:
+								//monster
+								break;
+							case 1:case 2:
+							{
+								broadcastSend(EVENT_PACKET, i);
+								_eventManager->updateEvent(i, clock());
+								break;
+							}
+							case 6:case 7:
+							{
+								broadcastSend(EVENT_PACKET, i);
+								_eventManager->updateEvent(i + 1, clock());
+								break;
+							}
+							case 3:case 4:
+								_eventManager->updateEvent(i, clock());
+								break;
+							case 5:
+								// 1초만 올립니다
+								_eventManager->updateEvent(i + 1, clock());
+								break;
+							case 9:
+								_eventManager->updateEvent(i, clock());
+							default:
+								break;
+							}
+						}// if 이벤트 발생
+					} // for:모든 이벤트 확인
+					eventFlag = true;
+				}
+				else
+					eventExpected = true;// atomic event
 
 				//Monster
-				tok = clock() - tek;
-				if (tok >= 25) {
+				if (clock() - tek >= 25 && gameStart) {
 					if (_monsterManager->getStart()
 						&& MonsterFlag.compare_exchange_weak(monsterExpected, false) && !MonsterFlag) {
 						// 이동-공격을 queue에 저장
@@ -473,41 +495,58 @@ UINT WINAPI IOCPServer::completionThread()
 						char* data = _monsterManager->getJob();
 						if (data) {
 							// ATK
+							Monster* a = (Monster*)_monsterManager->getMonsterInfo();
+							cout << a->position[0] << " " << a->position[1] << " " << a->position[2] << endl;
 							if ((*(int*)data) == MONSTER_PACKET_ATK) {
 								Monster_ATK* atk = reinterpret_cast<Monster_ATK*>(data);
 								_userManager->setUserHp(atk->target, _monsterManager->getDmg());
-
 								cout << "ATK>>" << atk->target << endl;
-								//출력용
-								Monster* a = (Monster*)_monsterManager->getMonsterInfo();
-								//cout << a->position[0] << " " << a->position[1] << " " << a->position[2] << endl;
-								/*
 								for (auto monster_iter = users.begin(); monster_iter != users.end(); monster_iter++) {
-								_userManager->setJob(monster_iter->second, _userManager->getUserInfo(atk->target));
-								jobQueue.push_back(monster_iter->second);
+									_userManager->setJob(monster_iter->second, _userManager->getUserInfo(atk->target));
+									jobQueue.push_back(monster_iter->second);
 								}
-								*/
-								broadcastSend(USER_UPDATE_PACKET, atk->target);
+								//broadcastSend(USER_UPDATE_PACKET, atk->target);
 							}
 							// 이동
 							else
-								/*
 								for (auto monster_iter = users.begin(); monster_iter != users.end(); monster_iter++) {
-								_userManager->setJob(monster_iter->second, data);
-								jobQueue.push_back(monster_iter->second);
+									_userManager->setJob(monster_iter->second, data);
+									jobQueue.push_back(monster_iter->second);
 								}
-								*/
-								broadcastSend(MONSTER_PACKET, 0);
-						}
+								//broadcastSend(MONSTER_PACKET, 0);
+						}//몬스터 데이터가 없으면
 						MonsterFlag = true;
 					}
 					else
 						monsterExpected = true;
 					tek = clock();
 				}
+
+				// 1 sec event
+				if (gameStart && clock() - tok >= 1000 &&
+					secFlag.compare_exchange_weak(oneSecExpected, false) && !secFlag) {
+					// 모든 오브젝트들의 감정을 -1 && 이를 유저 전체에게 send? // 몬스터는 update를 통해 알아서
+					_userManager->update();
+					if (!gameover) {
+						for (int i = 0; i < users.size(); i += 2) {
+							if (!_userManager->alive(i) && !_userManager->alive(i + 1)) {
+								broadcastSend(GAMEOVER, i / 2);
+								gameover = true;
+								gameEnd();
+								break;
+							}
+						}
+					}
+
+					secFlag = true;
+					tok = clock();
+				}
+				else
+					oneSecExpected = true;
+					
 			}// Network - while
 
-			// 새로운 overlapped 구조체를 생성하지 않고 그대로 재사용
+			 // 새로운 overlapped 구조체를 생성하지 않고 그대로 재사용
 			pIoData = new PER_IO_DATA();
 			memset(&(pIoData->overlapped), 0, sizeof(OVERLAPPED));
 			memset(&(pIoData->buffer), 0, BUFSIZE);
@@ -519,199 +558,175 @@ UINT WINAPI IOCPServer::completionThread()
 			WSARecv(pHandleData->sock, &(pIoData->wsaBuf), 1, NULL, &dwFlag, &(pIoData->overlapped), NULL);
 		}
 
-		//timeout
+		//timeout && 종료
 		else {
 			if (GetLastError() != WAIT_TIMEOUT) {
 				// 0 Byte인데 Disconnect 함수 호출 전 - 후
-				if (dwBytesTransferred == 0 && pIoData->operationType != DISCONNECT) {
-					cout << "0BYTE - Disconnect" << endl;
-					// Load Disconnect
-					WSAIoctl(pHandleData->sock, SIO_GET_EXTENSION_FUNCTION_POINTER,
-						&GuidDisconnect, sizeof(GuidDisconnect),
-						&lpfnDisconnectEx, sizeof(lpfnDisconnectEx),
-						&bytes, NULL, NULL
-					);
-					memset(&(pIoData->overlapped), 0, sizeof(OVERLAPPED));
-					pIoData->operationType = DISCONNECT;
-					pIoData->sock = pHandleData->sock;
-					if (lpfnDisconnectEx(pIoData->sock, &pIoData->overlapped, TF_REUSE_SOCKET, 0) == false) {
-						if (GetLastError() != ERROR_IO_PENDING) {
-							// 후처리 필요
-							ErrorHandling("Disconnect Error");
+				if (userOutFlag.compare_exchange_weak(userOutExpected, false) && !userOutFlag) {
+					if (dwBytesTransferred == 0 && pIoData->operationType != DISCONNECT) {
+						//_userManager->exitUser(users[pHandleData->sock]);
+						//users[pHandleData->sock] = -1;
+						cout << "TIMEOUT>>0BYTE>>Disconnect" << endl;
+						// Load Disconnect
+						WSAIoctl(pHandleData->sock, SIO_GET_EXTENSION_FUNCTION_POINTER,
+							&GuidDisconnect, sizeof(GuidDisconnect),
+							&lpfnDisconnectEx, sizeof(lpfnDisconnectEx),
+							&bytes, NULL, NULL
+						);
+						memset(&(pIoData->overlapped), 0, sizeof(OVERLAPPED));
+						pIoData->operationType = DISCONNECT;
+						pIoData->sock = pHandleData->sock;
+						if (lpfnDisconnectEx(pIoData->sock, &pIoData->overlapped, TF_REUSE_SOCKET, 0) == false) {
+							if (GetLastError() != ERROR_IO_PENDING) {
+								// 후처리 필요
+								cout << "TIMEOUT>>DISCONNECTEX error" << endl;
+								ErrorHandling("Disconnect Error");
+							}
 						}
 					}
-					break;
+					userOutFlag = true;
+				}//flag
+				else
+					userOutExpected = true;
+				continue;
+			}
+			else {
+				// TIME OUT
+				// Job - Action->각각의 client buffer에 데이터 저장 / thread에 저장
+				if (!jobQueue.empty()) {
+					char* data = NULL;
+					data = _userManager->getJob(jobQueue.front());
+					if (data != NULL) {
+						SOCKET sock;
+						for (auto iter = users.begin(); iter != users.end(); iter++) {
+							if (iter->second == jobQueue.front()) {
+								sock = iter->first;
+								break;
+							}
+						}
+						jobQueue.erase(jobQueue.begin());
+						int* type = (int*)data;
+						LPER_IO_DATA ov = new PER_IO_DATA();
+						memset(&(ov->overlapped), 0, sizeof(OVERLAPPED));
+						memset(&(ov->buffer), 0, BUFSIZE);
+						ov->operationType = WRITE;
+						DWORD dwSend = 0;
+						if (*type == USER_PACKET || *type == USER_UPDATE_PACKET)
+							ov->wsaBuf.len = sizeof(User);
+						else if (*type == ACTION_PACKET)
+							ov->wsaBuf.len = sizeof(ActionPacket);
+						else if (*type == EVENT_PACKET)
+							ov->wsaBuf.len = sizeof(EventPacket);
+						else if (*type == MONSTER_PACKET)
+							ov->wsaBuf.len = sizeof(Monster);
+						ov->wsaBuf.buf = data;
+						WSASend(sock, &ov->wsaBuf, 1, &dwSend, 0, &ov->overlapped, NULL);
+					}
 				}
-				else if (pIoData->operationType == DISCONNECT) {
-					cout << "pIoData->operationType : ACCEPTEX" << endl;
-					// 소켓은 재사용 가능하게 해제되었고 Overlapped만 Disconnect 상태
-					// 소켓 재사용 및 AcceptEx 사용
-					// Overlapped 초기화
-					//users.erase(pIoData->sock);
 
-					// overlapped 초기화 및 
-					memset(&(pIoData->overlapped), 0, sizeof(OVERLAPPED));
-					memset(&(pIoData->buffer), 0, sizeof(BUFSIZE));
-					pIoData->wsaBuf.len = BUFSIZE;
-					pIoData->wsaBuf.buf = pIoData->buffer;
-					pIoData->operationType = ACCEPT;
-					lpfnAcceptEx(mServerSock, pIoData->sock, exBuf,
-						0,
-						sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
-						&bytes, &(pIoData->overlapped)
-					);
-					//cout << "접속한 유저 수 : " << users.size() << endl;
-					continue;
-				}
-			}
-			// Job - Action->각각의 client buffer에 데이터 저장 / thread에 저장
-			if (!jobQueue.empty()) {
-				char* data = NULL;
-				data = _userManager->getJob(jobQueue.front());
-				if (data != NULL) {
-					SOCKET sock;
-					for (auto iter = users.begin(); iter != users.end(); iter++) {
-						if (iter->second == jobQueue.front()) {
-							sock = iter->first;
-							break;
-						}
-					}
-					jobQueue.erase(jobQueue.begin());
-					int* type = (int*)data;
-					LPER_IO_DATA ov = new PER_IO_DATA();
-					memset(&(ov->overlapped), 0, sizeof(OVERLAPPED));
-					memset(&(ov->buffer), 0, BUFSIZE);
-					ov->operationType = WRITE;
-					DWORD dwSend = 0;
-					if (*type == USER_PACKET || *type == USER_UPDATE_PACKET)
-						ov->wsaBuf.len = sizeof(User);
-					else if (*type == ACTION_PACKET)
-						ov->wsaBuf.len = sizeof(ActionPacket);
-					else if (*type == EVENT_PACKET)
-						ov->wsaBuf.len = sizeof(EventPacket);
-					else if(*type == MONSTER_PACKET)
-						ov->wsaBuf.len = sizeof(Monster);
-					ov->wsaBuf.buf = data;
-					WSASend(sock, &ov->wsaBuf, 1, &dwSend, 0, &ov->overlapped, NULL);
-				}
-			}
-			
-			//Event
-			if (gameStart) {
-				time_t toc = clock() - tic;
-				if (eventFlag.compare_exchange_weak(eventExpected, false) && !eventFlag) {
+				//Event
+				if (gameStart && eventFlag.compare_exchange_weak(eventExpected, false) && !eventFlag) {
 					for (int i = 0; i < _eventManager->size(); i++) {
-						if (toc >= _eventManager->getEventTime(i)) {
+						if (clock() - tic >= _eventManager->getEventTime(i)) {
 							// 이벤트 실행
 							// 랜덤은 유저 전체에게 전달
-							// user - overlapped
+							cout << "TIMEOUT>>EVENT 발생>>" << i << endl;
 							switch (i)
 							{
 							case 0:
-								cout << "몬스터가 오브젝트를 공격하기 시작" << endl;
-								_eventManager->updateEvent(i, clock());
+								//monster
 								break;
-							case 1:case 2:case 6:case 7:
+							case 1:case 2:
 							{
-								cout << "Event 발생>>" << i << endl;
 								broadcastSend(EVENT_PACKET, i);
 								_eventManager->updateEvent(i, clock());
 								break;
 							}
-							case 3:case 4:case 5:
-								// 1초만 올립니다
+							case 6:case 7:
+							{
+								cout << i << endl;
+								broadcastSend(EVENT_PACKET, i);
+								_eventManager->updateEvent(i + 1, clock());
+								break;
+							}
+							case 3:case 4:
 								_eventManager->updateEvent(i, clock());
 								break;
-							} // random 생성 & 삭제
-							  // 해당 이벤트에 유저가 접근해 있는가
-							for (auto iter = users.begin(); iter != users.end(); iter++) {
-								// userInEvent -> state가 true인지 false인지도 확인해서 return
-								if (_eventManager->userInEvent(i, _userManager->getUserPos(iter->second))) {
-									// 유저가 해당 이벤트(i) 내
-									// 출력용
-									EventPacket* p = reinterpret_cast<EventPacket*>(_eventManager->getEvent(i));
-									cout << "Event 습득>>" << endl;
-									cout << p->id << endl;
-									cout << p->position[0] << p->position[1] << p->position[2] << endl;
-									cout << p->state << endl;
-									cout << iter->first << endl;;
-
-									if (i == 1 || i == 2) {
-										int emo[4] = { 20, 0, 0, 0 };
-										_userManager->setUserEmotion(iter->second, emo);
-										_eventManager->updateEvent(i, clock());
-										broadcastSend(USER_UPDATE_PACKET, iter->second);
-									}
-									else if (i == 3 || i == 4) {
-										int emo[4] = { 0, 3, 0, 0 };
-										_userManager->setUserEmotion(iter->second, emo);
-										broadcastSend(USER_UPDATE_PACKET, iter->second);
-									}
-									else if (i == 5) {
-										int emo[4] = { 0, 0, 3, 0 };
-										_userManager->setUserEmotion(iter->second, emo);
-										broadcastSend(USER_UPDATE_PACKET, iter->second);
-									}
-									else if (i == 6 || i == 7) {
-										int emo[4] = { 0, 0, 0, 20 };
-										_userManager->setUserEmotion(iter->second, emo);
-										_eventManager->updateEvent(i, clock());
-										broadcastSend(USER_UPDATE_PACKET, iter->second);
-									}
-								}// if user in Event
-							}// for users
+							case 5:
+								// 1초만 올립니다
+								_eventManager->updateEvent(i + 1, clock());
+								break;
+							case 9:
+								_eventManager->updateEvent(i, clock());
+							default:
+								break;
+							}
 						}// if 이벤트 발생
 					} // for:모든 이벤트 확인
 					eventFlag = true;
-				} // 이벤트 접근
-				else
-					eventExpected = true;// atomic event
-			} // gamestart-event
-
-			//Monster
-			tok = clock() - tek;
-			if (tok >= 25) {
-				if (_monsterManager->getStart()
-					&& MonsterFlag.compare_exchange_weak(monsterExpected, false) && !MonsterFlag) {
-					// 이동-공격을 queue에 저장
-					_monsterManager->upDate();
-					char* data = _monsterManager->getJob();
-					if (data) {
-						// ATK
-						if ((*(int*)data) == MONSTER_PACKET_ATK) {
-							Monster_ATK* atk = reinterpret_cast<Monster_ATK*>(data);
-							_userManager->setUserHp(atk->target, _monsterManager->getDmg());
-
-							cout << "ATK>>"<<atk->target << endl;
-							//출력용
-							Monster* a = (Monster*)_monsterManager->getMonsterInfo();
-							//cout << a->position[0] << " " << a->position[1] << " " << a->position[2] << endl;
-							/*
-							for (auto monster_iter = users.begin(); monster_iter != users.end(); monster_iter++) {
-							_userManager->setJob(monster_iter->second, _userManager->getUserInfo(atk->target));
-							jobQueue.push_back(monster_iter->second);
-							}
-							*/
-							broadcastSend(USER_UPDATE_PACKET, atk->target);
-						}
-						// 이동
-						else
-							/*
-							for (auto monster_iter = users.begin(); monster_iter != users.end(); monster_iter++) {
-							_userManager->setJob(monster_iter->second, data);
-							jobQueue.push_back(monster_iter->second);
-							}
-							*/
-							broadcastSend(MONSTER_PACKET, 0);
-					}
-					MonsterFlag = true;
 				}
 				else
-					monsterExpected = true;
-				tek = clock();
-			}
+					eventExpected = true;// atomic event
 
-		} // time out
+				//Monster
+				if (clock() - tek >= 25 && gameStart) {
+					if (_monsterManager->getStart()
+						&& MonsterFlag.compare_exchange_weak(monsterExpected, false) && !MonsterFlag) {
+						// 이동-공격을 queue에 저장
+						_monsterManager->upDate();
+						char* data = _monsterManager->getJob();
+						if (data) {
+							// ATK
+							Monster* a = (Monster*)_monsterManager->getMonsterInfo();
+							cout << a->position[0] << " " << a->position[1] << " " << a->position[2] << endl;
+							if ((*(int*)data) == MONSTER_PACKET_ATK) {
+								Monster_ATK* atk = reinterpret_cast<Monster_ATK*>(data);
+								_userManager->setUserHp(atk->target, _monsterManager->getDmg());
+								cout << "ATK>>" << atk->target << endl;
+								for (auto monster_iter = users.begin(); monster_iter != users.end(); monster_iter++) {
+									_userManager->setJob(monster_iter->second, _userManager->getUserInfo(atk->target));
+									jobQueue.push_back(monster_iter->second);
+								}
+								//broadcastSend(USER_UPDATE_PACKET, atk->target);
+							}
+							// 이동
+							else
+								for (auto monster_iter = users.begin(); monster_iter != users.end(); monster_iter++) {
+									_userManager->setJob(monster_iter->second, data);
+									jobQueue.push_back(monster_iter->second);
+								}
+							//broadcastSend(MONSTER_PACKET, 0);
+						}//몬스터 데이터가 없으면
+						MonsterFlag = true;
+					}
+					else
+						monsterExpected = true;
+					tek = clock();
+				}
+
+				// 1 sec event
+				if (gameStart && clock() - tok >= 1000 &&
+					secFlag.compare_exchange_weak(oneSecExpected, false) && !secFlag) {
+					// 모든 오브젝트들의 감정을 -1 && 이를 유저 전체에게 send? // 몬스터는 update를 통해 알아서
+					_userManager->update();
+					if (!gameover) {
+						for (int i = 0; i < users.size(); i += 2) {
+							if (!_userManager->alive(i) && !_userManager->alive(i + 1)) {
+								broadcastSend(GAMEOVER, i / 2);
+								gameover = true;
+								gameEnd();
+								break;
+							}
+						}
+					}
+
+					secFlag = true;
+					tok = clock();
+				}
+				else
+					oneSecExpected = true;
+			}
+		}
 	}//GQCS
 
 	return 0;
