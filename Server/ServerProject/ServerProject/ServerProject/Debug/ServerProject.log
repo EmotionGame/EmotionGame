@@ -1,0 +1,4 @@
+﻿  UserManager.cpp
+c:\users\bluehobbit\source\repos\serverproject\serverproject\serverproject\usermanager.cpp(50): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+c:\users\bluehobbit\source\repos\serverproject\serverproject\serverproject\usermanager.cpp(117): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+  ServerProject.vcxproj -> C:\Users\bluehobbit\source\repos\ServerProject\ServerProject\Debug\ServerProject.exe
